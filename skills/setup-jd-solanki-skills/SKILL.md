@@ -30,4 +30,4 @@ When in doubt, load too few rather than too many — you can read a reference la
 
 ## 2. Third-Party Skills
 
-Read [`THIRD-PARTY.md`](../../THIRD-PARTY.md) for a list of third-party skills, list them and suggest user that these are skills that they may want to install and use in their projects.
+Read [`THIRD-PARTY.md`](./THIRD-PARTY.md) for a list of third-party skills, list them and suggest user that these are skills that they may want to install and use in their projects.
