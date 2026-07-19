@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 ## 1. Upsert Agent Instructions
 
-Upsert following instructions into user's `CLAUDE.md` or `AGENTS.md`. Ask user for which file(s) to upsert into, and if the file does not exist, ask which file(s) to create.
+Upsert following instructions into user's `CLAUDE.md` or `AGENTS.md`. Ask user for which file(s) to upsert into, and if the file does not exist, ask which file(s) to create. If both files are proposed, use `AGENTS.md` as a source and soft symlink `CLAUDE.md`.
 
 <template>
 ## Skill reference loading
