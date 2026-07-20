@@ -6,7 +6,13 @@ disable-model-invocation: true
 
 ## 1. Upsert Agent Instructions
 
-Upsert following instructions into user's `CLAUDE.md` or `AGENTS.md`. Ask user for which file(s) to upsert into, and if the file does not exist, ask which file(s) to create. If both files are proposed, use `AGENTS.md` as a source and soft symlink `CLAUDE.md`.
+Upsert the instructions in the `<template>` below into the user's agent instructions file. The goal is to keep **one single file as the source of truth** and have the other file be a **soft symlink** pointing to it, so both `CLAUDE.md` and `AGENTS.md` always stay in sync.
+
+Determine what to do based on which files already exist:
+
+- **Neither exists:** Create `AGENTS.md` as the source file, upsert the instructions into it, then create `CLAUDE.md` as a soft symlink pointing to `AGENTS.md`.
+- **Only one exists:** Upsert the instructions into the existing file, then ask the user if they want to generate the second file. If they say yes, create the second file as a soft symlink pointing to the existing (source) file.
+- **Both exist:** Simply upsert the instructions into the source file. If the second file is not a symlink of the source, suggest that the user symlink one file from the other source file they prefer (so the two stay in sync).
 
 <template>
 ## Skill reference loading
@@ -29,5 +35,8 @@ When in doubt, load too few rather than too many — you can read a reference la
 </template>
 
 ## 2. Third-Party Skills
+
+> [!IMPORTANT]
+> Only proceed with this section once **1. Upsert Agent Instructions** is fully done.
 
 Read [`THIRD-PARTY.md`](./THIRD-PARTY.md) for a list of third-party skills, list them and suggest user that these are skills that they may want to install and use in their projects.
