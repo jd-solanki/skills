@@ -1,6 +1,6 @@
 ---
 name: bruno
-description: Create and manage Bruno API collections in the Bru Lang (.bru) format — adding a request, creating an environment, writing pre/post scripts, or scaffolding a collection. Triggers: "add Bruno request", "Bruno collection", "write a .bru", "Bru Lang".
+description: "Create and manage Bruno API collections in the Bru Lang (.bru) format - adding a request, creating an environment, writing pre/post scripts, or scaffolding a collection. Triggers: 'add Bruno request', 'Bruno collection', 'write a .bru', 'Bru Lang'."
 disable-model-invocation: true
 ---
 
