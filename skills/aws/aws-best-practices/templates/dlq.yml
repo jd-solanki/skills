@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Shared DLQ with CloudWatch alerting
+
+Parameters:
+  DLQAlarmEmailAddress:
+    Type: String
+    Description: Email address that receives DLQ alerts
+  IsFifoQueue:
+    Type: String
+    Description: Whether to create a FIFO or standard queue
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+
+Conditions:
+  CreateFifoQueue: !Equals [!Ref IsFifoQueue, "true"]
+
+Resources:
+  DLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: !If [CreateFifoQueue, true, !Ref AWS::NoValue]
+      ContentBasedDeduplication: !If [CreateFifoQueue, true, !Ref AWS::NoValue]
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  DLQAlertsTopic:
+    Type: AWS::SNS::Topic
+
+  DLQAlertEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref DLQAlertsTopic
+      Protocol: email
+      Endpoint: !Ref DLQAlarmEmailAddress
+
+  DLQHasMessagesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub "Alert when DLQ ${DLQ.QueueName} has visible messages"
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DLQ.QueueName
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref DLQAlertsTopic
+
+Outputs:
+  QueueUrl:
+    Description: URL of the DLQ queue
+    Value: !Ref DLQ
+  QueueArn:
+    Description: ARN of the DLQ queue
+    Value: !GetAtt DLQ.Arn
+  QueueName:
+    Description: Name of the DLQ queue
+    Value: !GetAtt DLQ.QueueName
+  TopicArn:
+    Description: SNS topic ARN for DLQ alerts
+    Value: !Ref DLQAlertsTopic
+  AlarmName:
+    Description: CloudWatch alarm name monitoring the DLQ
+    Value: !Ref DLQHasMessagesAlarm

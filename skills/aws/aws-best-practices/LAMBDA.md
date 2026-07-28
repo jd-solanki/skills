@@ -6,25 +6,13 @@
 
 ```python
 import json
-import logging
-import sys
 from typing import Any
 
 # Assuming shared_layer is a Lambda Layer containing shared types and utilities
+from shared_layer.log import log_prefix_scope, setup_logger
 from shared_layer.sqs.types import SQSBatchItemFailure, SQSBatchResponse, SQSEvent
 from shared_layer.utils.encoders import DecimalEncoder
 from shared_layer.utils.string import decode_json_strings
-```
-
-**Logger setup — do this once at module level:**
-
-```python
-logger = logging.getLogger()
-logger.handlers = []  # prevent duplicate log lines from default handler
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
 ```
 
 **Handler signature — always type with shared layer types:**
@@ -32,6 +20,29 @@ logger.setLevel(logging.INFO)
 ```python
 def lambda_handler(event: SQSEvent, context: Any) -> SQSBatchResponse:
 ```
+
+## Logging — `setup_logger()`
+
+Call `setup_logger()` once at module level. Never hand-roll handler wiring in a Lambda — the setup lives in one shared module so a format change is a one-place edit:
+
+```python
+logger = setup_logger()  # module level, above the handler
+```
+
+Copy [shared_layer/log.py](shared_layer/log.py) into your shared layer. It replaces the handler AWS pre-installs (which duplicates every line) with a single stdout handler formatted `[LEVEL] message`, and takes an optional `level="DEBUG"`.
+
+### `log_prefix_scope()` — tag a block of lines
+
+A batch handler interleaves lines from many records, so a bare message can't be traced back to the record that emitted it. Wrap the per-record work in `log_prefix_scope(label, value)` and every line inside carries that identifier:
+
+```python
+def process_record(record: Record) -> None:
+    with log_prefix_scope("sku", record.get("sku")):
+        logger.info("Processing product")
+        # -> [INFO] [sku:ABC-123] Processing product
+```
+
+`label` is rendered verbatim — keep it snake_case. An empty or missing `value` yields no prefix, so `.get()` on an absent key degrades to an unprefixed line rather than raising. The scope restores the previous prefix on exit, so one record's identifier never leaks into the next iteration.
 
 ## Event Logging
 
@@ -47,27 +58,9 @@ logger.info(
 ```
 
 - `decode_json_strings` makes nested JSON strings readable in CloudWatch logs — SQS `body` fields often contain JSON-encoded strings that show up as escaped noise without it
-- `DecimalEncoder` safely serializes DynamoDB `Decimal` values
+- `DecimalEncoder` safely serializes any `Decimal` values
 
-Add `decode_json_strings` to your `shared_layer/utils/string.py`:
-
-```python
-import json
-from typing import Any
-
-
-def decode_json_strings(obj: Any) -> Any:
-    if isinstance(obj, str):
-        try:
-            return decode_json_strings(json.loads(obj))
-        except (ValueError, TypeError):
-            return obj
-    elif isinstance(obj, dict):
-        return {k: decode_json_strings(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [decode_json_strings(item) for item in obj]
-    return obj
-```
+Copy both into your shared layer: [shared_layer/utils/string.py](shared_layer/utils/string.py) and [shared_layer/utils/encoders.py](shared_layer/utils/encoders.py).
 
 ## batchItemFailures — Always Implement
 
@@ -98,7 +91,12 @@ def lambda_handler(event: SQSEvent, context: Any) -> SQSBatchResponse:
 Extract domain logic into a dedicated `process_record()` function. The handler loop owns SQS mechanics (parsing, error capture, retry signalling); `process_record()` owns the domain logic and knows nothing about SQS:
 
 ```python
-def process_record(record: dict) -> None:
+from typing import TypedDict
+
+# You don't necessarily need to create `Record` type, it's just for example and mostly you'll reuse existing type for `record` parameter
+class Record(TypedDict): ...
+
+def process_record(record: Record) -> None:
     # domain logic only — no SQS-specific code here
     order_id = record["orderId"]
     ...
@@ -108,7 +106,7 @@ This keeps the two concerns independently testable.
 
 ## CloudWatch Alarm
 
-Every Lambda must have a CloudWatch alarm that fires on errors. Use the reusable SAM nested-stack template in your shared templates directory:
+Every Lambda must have a CloudWatch alarm that fires on errors. Use the reusable SAM nested-stack template in your shared templates directory — copy [templates/lambda-cloudwatch-alarm.yml](templates/lambda-cloudwatch-alarm.yml) there if the project doesn't have one yet:
 
 ```yaml
 MyFunctionErrorAlarm:
@@ -117,9 +115,10 @@ MyFunctionErrorAlarm:
     Location: ../../shared/templates/lambda-cloudwatch-alarm.yml
     Parameters:
       FunctionName: !Ref MyFunction
+      AlarmSNSTopicArn: !Ref ErrorAlarmSNSTopicArn
 ```
 
-The template creates an `Errors >= 1` alarm over a 1-minute evaluation period.
+The template creates an `Errors >= 1` alarm over a single 10-minute evaluation period.
 
 ## Lambda / SQS Naming Convention
 

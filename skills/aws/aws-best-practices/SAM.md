@@ -97,10 +97,15 @@ Transform:
 
 Reusable nested-stack templates live in a shared templates directory. Always check there before writing a new resource inline.
 
+Ready-to-use copies ship with this skill in [templates/](templates/) — copy them into your project's shared templates directory as-is:
+
 | Template | Use |
 |---|---|
-| `lambda-cloudwatch-alarm.yml` | CloudWatch `Errors >= 1` alarm for a Lambda |
-| `queue-triggered-lambda.yml` | Full FIFO SQS + DLQ + Lambda + alarm stack |
+| [`lambda-cloudwatch-alarm.yml`](templates/lambda-cloudwatch-alarm.yml) | CloudWatch `Errors >= 1` alarm for a Lambda |
+| [`dlq.yml`](templates/dlq.yml) | Dead-letter queue + SNS email subscription + "has messages" alarm |
+| [`queue-triggered-lambda.yml`](templates/queue-triggered-lambda.yml) | Full FIFO SQS + DLQ + Lambda + alarm stack |
+
+`queue-triggered-lambda.yml` nests the other two by relative path (`./dlq.yml`, `./lambda-cloudwatch-alarm.yml`), so copy all three into the same directory. It hardcodes `Runtime: python3.13` and `Handler: lambda_function.lambda_handler` — edit those for a non-Python stack.
 
 ### Passing Lambda Env Vars to Generic Templates
 

@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Reusable nested template for a queue-triggered Lambda processor.
+  Creates an SQS queue (FIFO or standard), a dead-letter queue (via dlq),
+  an SQS event source mapping on the Lambda, the Lambda function itself,
+  and a Lambda error CloudWatch alarm (via lambda-cloudwatch-alarm).
+
+Parameters:
+  ResourceName:
+    Type: String
+    Description: Kebab-case resource name used in resource descriptions and alarm labels
+  CodeUri:
+    Type: String
+    Description: >-
+      Local path to the Lambda source directory.
+      IMPORTANT: SAM resolves this path relative to THIS FILE'S directory
+      (the shared templates directory), not the calling template's directory.
+      Callers from a sibling microservice must use: ../../{service}/lambdas/{function}/
+      Agents: document this same convention with a comment at every consumer call site.
+  RoleArn:
+    Type: String
+    Description: >-
+      IAM role ARN the Lambda assumes at runtime.
+      Prefer a shared base role for lambdas that only need SQS consumer permissions:
+        RoleArn: !ImportValue
+          Fn::Sub: "${SharedStackName}:QueueTriggeredLambdaBaseRoleArn"
+      Only define a custom role when the Lambda needs permissions beyond SQS
+      (e.g. Secrets Manager, S3, DynamoDB).
+  LayerArns:
+    Type: String
+    Description: Comma-separated list of Lambda layer ARNs (e.g. "arn:...:layer1:1,arn:...:layer2:3")
+  DLQAlarmEmailAddress:
+    Type: String
+    Description: Email address that receives DLQ CloudWatch alarm notifications
+  ErrorAlarmSNSTopicArn:
+    Type: String
+    Description: SNS topic ARN for Lambda error alarm notifications
+  IsFifoQueue:
+    Type: String
+    Description: Set to "true" to create a FIFO queue; "false" for a standard queue
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+  ContentBasedDeduplication:
+    Type: String
+    Description: >-
+      Enable SQS content-based deduplication. Applies only when IsFifoQueue is "true";
+      ignored for standard queues.
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+  LambdaTimeout:
+    Type: Number
+    Description: >-
+      Lambda function timeout in seconds. Defaults to 900 (the max) for heavy handlers
+      such as image processing. Fast "forwarder" lambdas (routers that just fan a message
+      out to other queues) should pass a SMALL value — see the VisibilityTimeout note for
+      why this matters.
+    Default: 900
+    MinValue: 1
+    MaxValue: 900
+  VisibilityTimeout:
+    Type: Number
+    Description: >-
+      SQS visibility timeout in seconds. Must be >= the Lambda timeout (>= 6x is the
+      recommended headroom for SQS retries). With the default 900 s timeout the minimum
+      is 5400 s. A failed/partial-batch record is invisible for this long before it is
+      retried, so a small VisibilityTimeout (paired with a small LambdaTimeout) means
+      fast recovery — and, if the retry lands inside the 5-minute SQS dedup window, the
+      re-send to already-succeeded destinations is deduplicated instead of reprocessed.
+    Default: 5400
+  MaxReceiveCount:
+    Type: Number
+    Description: Maximum receive attempts before a message is moved to the DLQ
+    Default: 3
+  LambdaEnvironmentVariables:
+    Type: String
+    Description: >-
+      JSON-encoded map of environment variables to inject into the Lambda.
+      In the parent template, prefer Fn::ToJsonString (YAML shorthand: !ToJsonString)
+      to build this from a map literal — it supports dynamic !Ref / !GetAtt values
+      and avoids hand-writing escaped JSON strings.
+      Example:
+        LambdaEnvironmentVariables: !ToJsonString
+          DB_HOST: mydb.example.com
+          QUEUE_ARN: !GetAtt MyQueue.Arn
+      Pass '{}' when no variables are needed.
+    Default: "{}"
+
+Conditions:
+  IsFifo: !Equals [!Ref IsFifoQueue, "true"]
+  ContentBasedDeduplicationEnabled: !Equals [!Ref ContentBasedDeduplication, "true"]
+
+Resources:
+  # SECTION Dead-Letter Queue
+  DLQ:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./dlq.yml
+      Parameters:
+        DLQAlarmEmailAddress: !Ref DLQAlarmEmailAddress
+        IsFifoQueue: !Ref IsFifoQueue
+  # !SECTION
+
+  # SECTION Main Queue
+  ProcessorQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: !If [IsFifo, true, !Ref AWS::NoValue]
+      ContentBasedDeduplication: !If
+        - IsFifo
+        - !If [ContentBasedDeduplicationEnabled, true, false]
+        - !Ref AWS::NoValue
+      VisibilityTimeout: !Ref VisibilityTimeout
+      MessageRetentionPeriod: 1209600 # 14 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DLQ.Outputs.QueueArn
+        maxReceiveCount: !Ref MaxReceiveCount
+  # !SECTION
+
+  # SECTION Lambda Function
+  ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub "Queue-triggered processor: ${ResourceName}"
+      CodeUri: !Ref CodeUri
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.13
+      Timeout: !Ref LambdaTimeout
+      Role: !Ref RoleArn
+      Layers: !Split [",", !Ref LayerArns]
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ProcessorQueue.Arn
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+      Environment:
+        Variables:
+          LAMBDA_ENV_VARS: !Ref LambdaEnvironmentVariables
+
+  ProcessorFunctionErrorAlarm:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./lambda-cloudwatch-alarm.yml
+      Parameters:
+        FunctionName: !Ref ProcessorFunction
+        AlarmSNSTopicArn: !Ref ErrorAlarmSNSTopicArn
+        AlarmDescription: !Sub "${ResourceName} Lambda errors"
+  # !SECTION
+
+Outputs:
+  QueueUrl:
+    Description: URL of the SQS processor queue
+    Value: !Ref ProcessorQueue
+  QueueArn:
+    Description: ARN of the SQS processor queue
+    Value: !GetAtt ProcessorQueue.Arn
+  QueueName:
+    Description: Name of the SQS processor queue
+    Value: !GetAtt ProcessorQueue.QueueName
+  FunctionArn:
+    Description: ARN of the Lambda processor function
+    Value: !GetAtt ProcessorFunction.Arn
+  FunctionName:
+    Description: Name of the Lambda processor function
+    Value: !Ref ProcessorFunction

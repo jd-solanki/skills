@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Reusable CloudWatch Alarm for Lambda function errors.
+  Triggers when a Lambda function has >= 1 error.
+
+Parameters:
+  FunctionName:
+    Type: String
+    Description: Name of the Lambda function to monitor
+  AlarmSNSTopicArn:
+    Type: String
+    Description: SNS topic ARN to send alarm notifications
+  AlarmDescription:
+    Type: String
+    Description: Description for the CloudWatch alarm
+    Default: Lambda function errors
+
+Resources:
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Ref AlarmDescription
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 600
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref FunctionName
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      TreatMissingData: notBreaching
