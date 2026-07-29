@@ -11,7 +11,7 @@ Maintain an **adoption map**: every upstream-changed path belongs to one bounded
 ## 1. Establish the baseline
 
 1. Read the repository instructions and inspect the current branch, worktree, history, and remotes.
-2. Confirm the lowercase `nuxtstart` remote exists with `git remote get-url nuxtstart`. When it is absent, offer to add it and ask the user for permission and the preferred URL.
+2. Confirm the lowercase `nuxtstart` remote exists with `git remote get-url nuxtstart`. When it is absent, offer to add it and ask the user for permission (Repo: nuxtstart/nuxtstart).
 3. Begin integration from a clean worktree. When local changes exist, show the exact paths and ask the user to commit, stash, or authorize a safe preparation step.
 4. Record the pre-pull `HEAD`, then fetch with `git fetch nuxtstart --prune`.
 5. Resolve the upstream default branch with `git symbolic-ref --quiet --short refs/remotes/nuxtstart/HEAD`. If that ref is absent, obtain the remote's advertised HEAD instead of guessing a branch name. Record both the remote-tracking ref and its branch name, such as `nuxtstart/main` and `main`.
@@ -65,7 +65,7 @@ git pull --no-rebase --no-ff --no-commit nuxtstart <upstream-branch>
 
 Compare `FETCH_HEAD` with the audited upstream SHA. When upstream advanced during the audit, map the incremental paths before continuing. Apply the adoption-map decisions to the pending merge, preserving both intents for every **Reconcile** area.
 
-If the pull produces conflicts, invoke `/resolving-merge-conflicts` and give it the adoption map as the statement of intent. Resume this skill after conflict resolution finishes.
+If the pull produces conflicts, invoke `/resolving-merge-conflicts` (Add if missing via `npx skills@latest add mattpocock/skills --skill resolving-merge-conflicts`) and give it the adoption map as the statement of intent. Resume this skill after conflict resolution finishes.
 
 This step is complete when the pull is integrated, every adoption-map decision is represented, and no unmerged paths remain.
 
