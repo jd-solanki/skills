@@ -1,0 +1,4 @@
+interface:
+  display_name: Adopt NuxtStart Changes
+  short_description: Audit and pull NuxtStart upstream changes
+  default_prompt: 'Use $adopt-nuxtstart-changes to audit, pull, and reconcile NuxtStart upstream changes.'
