@@ -65,6 +65,8 @@ git pull --no-rebase --no-ff --no-commit nuxtstart <upstream-branch>
 
 Compare `FETCH_HEAD` with the audited upstream SHA. When upstream advanced during the audit, map the incremental paths before continuing. Apply the adoption-map decisions to the pending merge, preserving both intents for every **Reconcile** area.
 
+Never stage with `git add -A` or `git add .`. Stage each resolved path by name. A modify/delete or rename/delete conflict leaves the upstream copy of a path the child deleted sitting in the working tree, so a bulk stage silently reintroduces it and a dropped area creeps back one sync at a time. Resolve every such conflict deliberately — `git rm <path>` to keep the child's deletion, `git add <path>` to accept the upstream file.
+
 If the pull produces conflicts, invoke `/resolving-merge-conflicts` (Add if missing via `npx skills@latest add mattpocock/skills --skill resolving-merge-conflicts`) and give it the adoption map as the statement of intent. Resume this skill after conflict resolution finishes.
 
 This step is complete when the pull is integrated, every adoption-map decision is represented, and no unmerged paths remain.
@@ -72,10 +74,11 @@ This step is complete when the pull is integrated, every adoption-map decision i
 ## 4. Verify and report
 
 1. Inspect the full merge against the recorded pre-pull `HEAD`.
-2. Discover and run the repository's required formatting, lint, typecheck, test, and build checks in proportion to the adopted areas.
-3. If the merge is still pending, commit it with a conventional message that identifies the NuxtStart sync.
+2. Discover and run the repository's required formatting, lint, typecheck, test, and build checks in proportion to the adopted areas. Every fix the sync requires belongs in the pending merge, not a follow-up commit — the merge commit stops being a complete review point the moment part of the sync lands outside it.
+3. If the merge is still pending, commit it with a conventional subject naming the adopted upstream SHA, such as `chore: sync with nuxtstart <sha>`. The body is the durable record of this sync — the report below is gone once the conversation ends, the commit is not — so it must carry the upstream range reviewed and an **Adopted** / **Preserved** / **Reconciled** breakdown giving the reasoning behind each decision.
 4. Confirm the worktree has no unresolved merge state.
 5. Report:
+   - the net effect on the child from `git diff --stat <pre-pull HEAD> HEAD`, stated up front as "N upstream commits → N files changed";
    - the upstream branch, SHA, and range reviewed;
    - the adoption map and any subagent assignments;
    - upstream changes accepted;
