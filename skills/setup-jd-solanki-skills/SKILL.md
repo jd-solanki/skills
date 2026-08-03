@@ -32,6 +32,16 @@ To decide what to load:
 3. **Don't re-read** what's already loaded; re-evaluate only if the task changes.
 
 When in doubt, load too few rather than too many — you can read a reference later once the task makes the condition clear.
+
+## Context Window - Smart Zone & Sub Agents
+
+As the context window fills with a large number of irrelevant/unwanted tokens, it causes model's output quality to degrade.
+
+Use Sub Agents to keep main context window clean, lean & relevant.
+
+## Sub Agents
+
+When invoking sub agents, it's important to also pass instruction to invoke task related skills along with relevant context to them. E.g. When handing a feature/task, instruct to invoke feature development related skills available in the system.
 </template>
 
 ## 2. Third-Party Skills
