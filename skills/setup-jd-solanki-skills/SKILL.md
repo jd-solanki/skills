@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 ## 1. Upsert Agent Instructions
 
-Upsert the instructions in the `<template>` below into the user's agent instructions file. The goal is to keep **one single file as the source of truth** and have the other file be a **soft symlink** pointing to it, so both `CLAUDE.md` and `AGENTS.md` always stay in sync.
+Upsert the instructions in the `<template>` below into the user's agent instructions file. The goal is to keep **one single file as the source of truth** and have the other file be a **soft symlink** pointing to it, so both `CLAUDE.md` and `AGENTS.md` always stay in sync. These also include updating outdated instruction files.
 
 Determine what to do based on which files already exist:
 
