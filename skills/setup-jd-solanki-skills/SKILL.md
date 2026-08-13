@@ -37,7 +37,7 @@ When in doubt, load too few rather than too many — you can read a reference la
 
 As the context window fills with a large number of irrelevant/unwanted tokens, it causes model's output quality to degrade.
 
-Use Sub Agents to keep main context window clean, lean & relevant. For example, when verification of a feature is required, invoke a sub agent to handle the verification task and return only the result to main agent. This way, main agent's context window remains clean and relevant to the main task.
+Use Sub Agents to keep main context window clean, lean & relevant. For example, when verification of a feature is required, invoke a sub agent to handle the verification task and return only the result to main agent. This way, main agent's context window remains clean and relevant to the main task. Another example can be inspecting bug in implement task, where sub agent can be invoked to handle the inspection and return only the result to main agent.
 
 ## Sub Agents
 
