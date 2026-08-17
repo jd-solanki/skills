@@ -45,7 +45,7 @@ While working on main task, if you find out that user has given another task whi
 
 When invoking sub agents, it's important to also pass instruction to invoke task related skills along with relevant context to them. E.g. When handing a feature/task, instruct to invoke feature development related skills available in the system.
 
-For example, when verification of a feature is required, invoke a sub agent to handle the verification task and return only the result to main agent. This way, main agent's context window remains clean and relevant to the main task. Another example can be inspecting bug in implement task, where sub agent can be invoked to handle the inspection and return only the result to main agent.
+For example, when verification of a task is required, invoke a sub agent to handle the verification task and return only the result to main agent. This way, main agent's context window remains clean and relevant to the main task. Another example can be inspecting bug in implement task, where sub agent can be invoked to handle the inspection and return only the result to main agent.
 </template>
 
 ## 2. Third-Party Skills
