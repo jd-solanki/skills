@@ -6,15 +6,19 @@ disable-model-invocation: true
 
 ## 1. Upsert Agent Instructions
 
-Upsert the instructions in the `<template>` below into the user's agent instructions file. The goal is to keep **one single file as the source of truth** and have the other file be a **soft symlink** pointing to it, so both `CLAUDE.md` and `AGENTS.md` always stay in sync. These also include updating outdated instruction files.
+**Pick the file to edit:**
 
-Determine what to do based on which files already exist:
+- If `CLAUDE.md` exists, edit it.
+- Else if `AGENTS.md` exists, edit it.
+- If neither exists, ask the user which one to create — don't pick for them.
 
-- **Neither exists:** Create `AGENTS.md` as the source file, upsert the instructions into it, then create `CLAUDE.md` as a soft symlink pointing to `AGENTS.md`.
-- **Only one exists:** Upsert the instructions into the existing file, then ask the user if they want to generate the second file. If they say yes, create the second file as a soft symlink pointing to the existing (source) file.
-- **Both exist:** Simply upsert the instructions into the source file. If the second file is not a symlink of the source, suggest that the user symlink one file from the other source file they prefer (so the two stay in sync).
+Never create `AGENTS.md` when `CLAUDE.md` already exists (or vice versa) — always edit the one that's already there.
 
-<template>
+If following template block already exists in the chosen file, update its contents in-place rather than appending a duplicate. Don't overwrite user edits to the surrounding sections.
+
+The block:
+
+```markdown
 ## Skill reference loading
 
 Skills ship a main `SKILL.md` (always loaded) plus optional files in the same directory — `references/*`, `examples/*`, `SAMPLE.md`, etc. — loaded on demand. Load them deliberately: not all up-front, not blindly.
@@ -46,7 +50,7 @@ While working on main task, if you find out that user has given another task whi
 When invoking sub agents, it's important to also pass instruction to invoke task related skills along with relevant context to them. E.g. When handing a feature/task, instruct to invoke feature development related skills available in the system.
 
 For example, when verification of a task is required, invoke a sub agent to handle the verification task and return only the result to main agent. This way, main agent's context window remains clean and relevant to the main task. Another example can be inspecting bug in implement task, where sub agent can be invoked to handle the inspection and return only the result to main agent.
-</template>
+```
 
 ## 2. Third-Party Skills
 
