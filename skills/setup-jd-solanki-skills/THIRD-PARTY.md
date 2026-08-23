@@ -6,3 +6,6 @@
 - [nostics](https://github.com/vercel-labs/nostics)
 - [better-auth](https://better-auth.com/docs/ai-resources/skills)
   - [better-auth MCP](https://better-auth.com/docs/ai-resources/mcp)
+- [context7](https://github.com/upstash/context7/tree/master/skills)
+  - [find-docs](https://github.com/upstash/context7/tree/master/skills/find-docs)
+  - [context7-cli](https://github.com/upstash/context7/tree/master/skills/context7-cli)
