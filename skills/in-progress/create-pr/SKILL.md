@@ -64,8 +64,7 @@ and costs you their trust.
 ## The title becomes history
 
 Your title is the line the squashed merge commit carries, so write it for
-`git log`. `git log --oneline -20` tells you whether the repo uses conventional
-commits.
+`git log`.
 
 ## Link the ticket
 

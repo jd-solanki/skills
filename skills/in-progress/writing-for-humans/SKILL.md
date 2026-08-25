@@ -29,6 +29,11 @@ writing two documents.
 One line, read in a list of two hundred. `scope: what happened`, under 70
 characters, no full stop at the end.
 
+Where the repo writes conventional commits, the title takes that shape:
+`type(scope): what happened`. `git log --oneline -20` settles whether it does, and
+the types already in that log are the ones to pick from.
+
+- `fix(upload): photo upload fails on iOS Safari` - the shape a conventional repo reads
 - `upload: photo upload fails on iOS Safari` - the reader knows what this is
 - `Fix upload bug` - tells the reader nothing
 - `Upload issues` - a topic, not a title
