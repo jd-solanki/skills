@@ -80,8 +80,9 @@ the gap in the ticket.
 ### 4. Draft it to a file
 
 Write the title and body to a markdown file in your OS temp directory, in the
-shape the tracker asks for (see below). Print the path. That file is what the user
-reviews and edits.
+shape the tracker asks for (see below). Print it as a `file://` URL on its own
+line, so the terminal renders it clickable. That file is what the user reviews and
+edits.
 
 ### 5. Clean it up
 
