@@ -50,6 +50,22 @@ While working on main task, if you find out that user has given another task whi
 When invoking sub agents, it's important to also pass instruction to invoke task related skills along with relevant context to them. E.g. When handing a feature/task, instruct to invoke feature development related skills available in the system.
 
 For example, when verification of a task is required, invoke a sub agent to handle the verification task and return only the result to main agent. This way, main agent's context window remains clean and relevant to the main task. Another example can be inspecting bug in implement task, where sub agent can be invoked to handle the inspection and return only the result to main agent.
+
+## Prefer a Single Source of Truth
+
+Do not duplicate knowledge that already has an authoritative source.
+
+When a value, rule, configuration, or behavior is defined elsewhere, reference, import, or derive from that source instead of copying it.
+
+Examples:
+
+* Import a shared constant instead of redefining it.
+* Read tool or runtime versions from their canonical config files instead of hard-coding them in scripts, CI, or docs.
+* Point documentation to the authoritative source when repeating the value would create another place to maintain.
+
+Before adding duplicated information, identify whether a canonical source already exists. If it does, use it.
+
+Avoid abstractions created only to remove superficial code repetition. Apply DRY to duplicated **knowledge**, not merely similar-looking code.
 ```
 
 Include this as well if user is using context7:
