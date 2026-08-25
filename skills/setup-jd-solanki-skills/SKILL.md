@@ -59,13 +59,14 @@ When a value, rule, configuration, or behavior is defined elsewhere, reference, 
 
 Examples:
 
-* Import a shared constant instead of redefining it.
-* Read tool or runtime versions from their canonical config files instead of hard-coding them in scripts, CI, or docs.
-* Point documentation to the authoritative source when repeating the value would create another place to maintain.
+* **Node.js version:** Do not hard-code the version in documentation, scripts, or CI if the repository already defines it in `.node-version`, `.nvmrc`, or another canonical runtime configuration. Reference or read from that source instead.
+* **pnpm version:** Do not repeat the pnpm version across documentation or tooling when it is already defined in `package.json`, such as through the `packageManager` field. Reference or derive it from there.
+* Import a shared constant instead of redefining the same value in multiple modules.
+* Read configuration from its canonical source instead of maintaining parallel copies.
 
-Before adding duplicated information, identify whether a canonical source already exists. If it does, use it.
+Before adding duplicated information, check whether a canonical source already exists. If it does, use that source.
 
-Avoid abstractions created only to remove superficial code repetition. Apply DRY to duplicated **knowledge**, not merely similar-looking code.
+Apply DRY to duplicated **knowledge**, not merely similar-looking code. Do not introduce abstractions solely to eliminate harmless code repetition when doing so would reduce clarity or increase coupling.
 ```
 
 Include this as well if user is using context7:
