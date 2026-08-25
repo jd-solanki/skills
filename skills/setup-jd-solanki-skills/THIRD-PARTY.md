@@ -9,3 +9,5 @@
 - [context7](https://github.com/upstash/context7/tree/master/skills)
   - [find-docs](https://github.com/upstash/context7/tree/master/skills/find-docs)
   - [context7-cli](https://github.com/upstash/context7/tree/master/skills/context7-cli)
+- [varlock](https://varlock.dev/guides/ai-tools/)
+  - [MCP](https://varlock.dev/guides/mcp/)
