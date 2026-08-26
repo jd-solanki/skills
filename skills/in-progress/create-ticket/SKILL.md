@@ -94,6 +94,9 @@ check, and the humanizer pass.
 Wait for the go-ahead. It may arrive after the user has edited the draft, so read
 the file again and file what it says now, not what you wrote earlier.
 
+Assign it to the author: `gh issue create --assignee @me`, or the same field on
+whichever tracker you landed on.
+
 Return the link.
 
 ## Where it goes
