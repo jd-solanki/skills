@@ -19,6 +19,7 @@ files sit beside it in the same folder, because the skills CLI installs the fold
 | `coding` | how code should look: naming, comments, structure |
 | `engineering` | how work gets done: git, tickets, pull requests |
 | `nuxtstart` | the Nuxtstart template |
+| `productivity` | working in this repo faster |
 | `scaffolding` | starting a project, or configuring this repo |
 | `third-party` | skills other people wrote, vendored here |
 | `in-progress` | written, not settled, not recommended yet |
