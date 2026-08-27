@@ -33,6 +33,28 @@ Parameters:
   DLQAlarmEmailAddress:
     Type: String
     Description: Email address that receives DLQ CloudWatch alarm notifications
+  DLQReminderIntervalHours:
+    Type: String
+    Description: >-
+      How often to re-email while the DLQ is still non-empty, in hours.
+      Passed straight through to dlq.yml, which owns the allowed values.
+    # Keep in sync with the DLQReminderIntervalHours default in ./dlq.yml.
+    Default: "24"
+  DLQReminderHourUTC:
+    Type: String
+    Description: >-
+      UTC hour the DLQ reminder is sent, two digits. Applies only to the "24"
+      and "168" intervals. Passed straight through to dlq.yml, which owns the
+      allowed values.
+    # Keep in sync with the DLQReminderHourUTC default in ./dlq.yml.
+    Default: "00"
+  DLQReminderMinuteUTC:
+    Type: String
+    Description: >-
+      Minute past DLQReminderHourUTC that the DLQ reminder is sent. Passed
+      straight through to dlq.yml, which owns the allowed values.
+    # Keep in sync with the DLQReminderMinuteUTC default in ./dlq.yml.
+    Default: "00"
   ErrorAlarmSNSTopicArn:
     Type: String
     Description: SNS topic ARN for Lambda error alarm notifications
@@ -103,6 +125,9 @@ Resources:
       Parameters:
         DLQAlarmEmailAddress: !Ref DLQAlarmEmailAddress
         IsFifoQueue: !Ref IsFifoQueue
+        DLQReminderIntervalHours: !Ref DLQReminderIntervalHours
+        DLQReminderHourUTC: !Ref DLQReminderHourUTC
+        DLQReminderMinuteUTC: !Ref DLQReminderMinuteUTC
   # !SECTION
 
   # SECTION Main Queue
