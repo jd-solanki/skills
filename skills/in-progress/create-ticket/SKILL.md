@@ -15,14 +15,11 @@ permission to file. Nothing reaches the tracker until the user says so.
 
 ## What every ticket answers
 
-Three headings. A developer on their first day can act on all three.
+Two headings. A developer on their first day can act on both.
 
 ```markdown
 ## What
 What you saw, or what you want. The first sentence says what is wrong.
-
-## Where to start
-The cheapest pointer that puts the reader where you were.
 
 ## Done when
 One sentence the reader can tick off.
@@ -53,6 +50,10 @@ The ticket owns what and why. How belongs to whoever picks it up, and a guessed
 plan goes stale and misleads. Report what you saw, not your theory of it. Already
 know the exact fix? One line, marked as a guess.
 
+Write it to last. A ticket can sit for a year before anyone reads it. Behaviour and
+effect stay true that long; file paths, line numbers, and today's code do not, so
+the ticket describes the feature or the bug on its own terms.
+
 One problem per ticket. Two problems are two tickets.
 
 ## Process
@@ -62,8 +63,8 @@ One problem per ticket. Two problems are two tickets.
 Mine what is already there: this conversation, the diff, the failing test output,
 the file you were just in, the linked issue.
 
-**Done when:** you can answer the three questions, or you know exactly which one
-you cannot.
+**Done when:** you can answer both questions, or you know exactly which one you
+cannot.
 
 ### 2. Look for a twin
 
@@ -94,6 +95,9 @@ check, and the humanizer pass.
 Wait for the go-ahead. It may arrive after the user has edited the draft, so read
 the file again and file what it says now, not what you wrote earlier.
 
+Assign it to the author: `gh issue create --assignee @me`, or the same field on
+whichever tracker you landed on.
+
 Return the link.
 
 ## Where it goes
@@ -113,8 +117,8 @@ Two look right, or none does? Ask once, then keep that answer for the session.
 ## Follow the repo's issue template
 
 On GitHub, `.github/ISSUE_TEMPLATE/` is the house style, and it wins. Pick the
-template that matches the shape, fill every field it marks required, and put the
-three answers inside its fields. Projects close tickets that ignore their own
+template that matches the shape, fill every field it marks required, and put both
+answers inside its fields. Projects close tickets that ignore their own
 template.
 
 Labels: use the ones the tracker already has. A new label is the user's call.

@@ -14,9 +14,130 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
+  DLQReminderIntervalHours:
+    Type: String
+    Description: >-
+      How often to re-email while the DLQ is still non-empty, in hours.
+      "0" turns the reminder off.
+      The list of values is short because the alarm tells the time by reading
+      the clock on each datapoint. An interval works only if it divides 24
+      exactly, or if it is 168 for once a week. 48 is not on the list: two days
+      does not divide into a seven-day week, so the gap would stretch or shrink
+      at every week boundary. Use 24 or 168 instead.
+    # Keep in sync with the DLQReminderIntervalHours default in
+    # ./queue-triggered-lambda.yml.
+    Default: "24"
+    AllowedValues:
+      - "0"
+      - "4"
+      - "6"
+      - "8"
+      - "12"
+      - "24"
+      - "168"
+  DLQReminderHourUTC:
+    Type: String
+    Description: >-
+      UTC hour the reminder is sent, two digits.
+      Used only when DLQReminderIntervalHours is "24" or "168". The shorter
+      cadences fire on fixed hours that cannot be moved, because CloudFormation
+      cannot do the arithmetic to shift a whole chain of hours.
+      Read the alarm description in the console to see the schedule you got.
+      The default is midnight UTC so the mail is already waiting at the start of
+      the day in most time zones. Set it per stack if that lands badly for you.
+    # Keep in sync with the DLQReminderHourUTC default in
+    # ./queue-triggered-lambda.yml.
+    Default: "00"
+    AllowedValues:
+      - "00"
+      - "01"
+      - "02"
+      - "03"
+      - "04"
+      - "05"
+      - "06"
+      - "07"
+      - "08"
+      - "09"
+      - "10"
+      - "11"
+      - "12"
+      - "13"
+      - "14"
+      - "15"
+      - "16"
+      - "17"
+      - "18"
+      - "19"
+      - "20"
+      - "21"
+      - "22"
+      - "23"
+  DLQReminderMinuteUTC:
+    Type: String
+    Description: >-
+      Minute past DLQReminderHourUTC that the reminder is sent.
+      "00" opens the window at the top of the hour, "30" at the half hour.
+      Half hours are here because some time zones sit 30 minutes off UTC, so no
+      whole UTC hour is a whole hour for them.
+      Used only when DLQReminderIntervalHours is "24" or "168".
+    # Keep in sync with the DLQReminderMinuteUTC default in
+    # ./queue-triggered-lambda.yml.
+    Default: "00"
+    AllowedValues:
+      - "00"
+      - "30"
+
+Mappings:
+  # Metric math has no modulo operator, so each cadence is spelled out as an
+  # explicit OR chain of UTC hours rather than HOUR(depth) % interval == 0.
+  # See DLQReminderIntervalHours above for why the value list is short.
+  # 16:00 UTC is the fixed anchor for these chains. "24" and "168" are absent on
+  # purpose: they fire at a single time, so they are built from
+  # DLQReminderHourUTC and DLQReminderMinuteUTC instead of being looked up here.
+  # HOUR() and MINUTE() are always UTC and have no time zone option, so the
+  # local send time shifts by an hour at each daylight-saving change.
+  # A CloudWatch alarm emails only on a state change, so an alarm that just
+  # watches depth mails once and then goes quiet. This chain gives the alarm
+  # a reason to go back to OK, so the next reminder can fire.
+  ReminderExpression:
+    "4":
+      Value: "IF((HOUR(depth) == 0 OR HOUR(depth) == 4 OR HOUR(depth) == 8 OR HOUR(depth) == 12 OR HOUR(depth) == 16 OR HOUR(depth) == 20) AND depth > 0, 1, 0)"
+    "6":
+      Value: "IF((HOUR(depth) == 4 OR HOUR(depth) == 10 OR HOUR(depth) == 16 OR HOUR(depth) == 22) AND depth > 0, 1, 0)"
+    "8":
+      Value: "IF((HOUR(depth) == 0 OR HOUR(depth) == 8 OR HOUR(depth) == 16) AND depth > 0, 1, 0)"
+    "12":
+      Value: "IF((HOUR(depth) == 4 OR HOUR(depth) == 16) AND depth > 0, 1, 0)"
+    # The three rows below are never read. "0" creates no alarm at all, and "24"
+    # and "168" build their expression from DLQReminderHourUTC and
+    # DLQReminderMinuteUTC with !Sub instead.
+    #
+    # They must still exist. CloudFormation resolves Fn::FindInMap eagerly, even
+    # inside the Fn::If branch it does not take, so a missing key fails the
+    # deploy outright with "Unable to get mapping for ReminderExpression::24::
+    # Value". That is how this template rolled back email-v2-prod and
+    # silverstreak-prod on 2026-08-27. cfn-lint does not catch it, and neither
+    # does a --no-execute-changeset: a nested stack is only validated when the
+    # parent actually executes.
+    #
+    # Invariant: every AllowedValue of DLQReminderIntervalHours needs a row here.
+    "0":
+      Value: "IF(depth < 0, 1, 0)"
+    "24":
+      Value: "IF(depth < 0, 1, 0)"
+    "168":
+      Value: "IF(depth < 0, 1, 0)"
 
 Conditions:
   CreateFifoQueue: !Equals [!Ref IsFifoQueue, "true"]
+  CreateReminderAlarm: !Not [!Equals [!Ref DLQReminderIntervalHours, "0"]]
+  # "24" and "168" fire once per cycle, so their single send time can come
+  # straight from the hour and minute parameters.
+  SingleShotCadence: !Or
+    - !Equals [!Ref DLQReminderIntervalHours, "24"]
+    - !Equals [!Ref DLQReminderIntervalHours, "168"]
+  WeeklyCadence: !Equals [!Ref DLQReminderIntervalHours, "168"]
 
 Resources:
   DLQ:
@@ -55,6 +176,52 @@ Resources:
       AlarmActions:
         - !Ref DLQAlertsTopic
 
+  # DLQHasMessagesAlarm emails once and then sticks in ALARM forever, because
+  # CloudWatch runs actions only on a state transition and queue depth never
+  # falls back on its own. This alarm supplies the missing transitions: the
+  # expression is 1 during a reminder hour and 0 the rest of the time, so the
+  # alarm cycles OK -> ALARM -> OK once per interval while the queue is dirty.
+  # One email per cycle, whether the DLQ holds 1 message or 7,000.
+  DLQStillHasMessagesReminderAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: CreateReminderAlarm
+    Properties:
+      AlarmDescription: !If
+        - SingleShotCadence
+        - !Sub "DLQ ${DLQ.QueueName} still has messages (reminder every ${DLQReminderIntervalHours}h at ${DLQReminderHourUTC}:${DLQReminderMinuteUTC} UTC)"
+        - !Sub "DLQ ${DLQ.QueueName} still has messages (reminder every ${DLQReminderIntervalHours}h, on fixed UTC hours)"
+      Metrics:
+        - Id: depth
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/SQS
+              MetricName: ApproximateNumberOfMessagesVisible
+              Dimensions:
+                - Name: QueueName
+                  Value: !GetAtt DLQ.QueueName
+            Period: 300
+            Stat: Maximum
+        - Id: reminder
+          Label: DLQ still not drained
+          ReturnData: true
+          Expression: !If
+            - SingleShotCadence
+            - !If
+              - WeeklyCadence
+              - !Sub "IF(DAY(depth) == 1 AND HOUR(depth) == ${DLQReminderHourUTC} AND MINUTE(depth) >= ${DLQReminderMinuteUTC} AND depth > 0, 1, 0)"
+              - !Sub "IF(HOUR(depth) == ${DLQReminderHourUTC} AND MINUTE(depth) >= ${DLQReminderMinuteUTC} AND depth > 0, 1, 0)"
+            - !FindInMap [ReminderExpression, !Ref DLQReminderIntervalHours, Value]
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      # No OKActions: this alarm returns to OK at the end of every reminder hour
+      # by design, and wiring them would double the mail.
+      AlarmActions:
+        - !Ref DLQAlertsTopic
+
 Outputs:
   QueueUrl:
     Description: URL of the DLQ queue
@@ -71,3 +238,7 @@ Outputs:
   AlarmName:
     Description: CloudWatch alarm name monitoring the DLQ
     Value: !Ref DLQHasMessagesAlarm
+  ReminderAlarmName:
+    Condition: CreateReminderAlarm
+    Description: CloudWatch alarm name that re-notifies while the DLQ is non-empty
+    Value: !Ref DLQStillHasMessagesReminderAlarm
