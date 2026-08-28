@@ -2,7 +2,6 @@
 name: create-ticket
 description: Draft one small, plain ticket as a markdown file, then file it on the project's tracker once the user approves.
 argument-hint: "[what the ticket is about]"
-disable-model-invocation: true
 ---
 
 # Create Ticket

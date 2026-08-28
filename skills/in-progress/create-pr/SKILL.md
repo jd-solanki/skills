@@ -2,7 +2,6 @@
 name: create-pr
 description: Open one pull request as a draft, with a body the reviewer can act on.
 argument-hint: "[what the PR does]"
-disable-model-invocation: true
 ---
 
 # Create PR
