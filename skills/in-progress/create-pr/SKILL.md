@@ -12,54 +12,43 @@ rules, and the de-slopping pass. This skill adds only what a pull request needs 
 top.
 
 The work is already written and committed. This turns it into a pull request a
-reviewer can act on. It asks someone for their time, and the body is your half of
-the trade: what changed, why it changed, and why they can trust it.
+reviewer can act on. It opens as a **draft**. Marking it ready for review is the
+author's call, never yours.
 
-It opens as a **draft**. Marking it ready for review is the author's call, never
-yours.
+## The body carries what the diff can't
 
-## What every PR body answers
+The diff is already open in the reviewer's tab. Anything they can read there is not
+your job to restate: bullets that say "adds X", "moves Y", "renames Z" pad the body
+without giving the reviewer something new. The body earns its space on the two
+things the diff cannot show:
 
-Three lines. The reviewer decides "do I trust this?" from them.
+1. **Why** — what was true before, and what forced the change. The trigger, the
+   report, the deadline, the security note.
+2. **Notes** — the things a careful reader still cannot infer from the diff after
+   reading it. Invariants that hold across the change, a decision that looks
+   arbitrary but was deliberate, a gotcha that will trip the next person, a
+   constraint from outside the repo.
 
-1. **Why** - what was true before, and why it had to change.
-2. **What changed** - what the diff does, in plain words. Not a list of files.
-3. **How you know** - the check you ran, and what it printed.
+That is the whole body. If a Note fails the test "could the reviewer figure this
+out from the diff alone?" it goes; if there are no surviving Notes, the section
+comes out. **Why** stays regardless — the reason a change happened is never in the
+diff.
 
-For a bug that is: the old behaviour, the cause, the fix. For a feature: the gap,
-the new behaviour, the proof it works. Same three slots either way.
+Section names read like a human wrote them: `## Why`, `## Notes`. Anything like
+`## What changed`, `## How you know`, `## Verification`, `## Things a reviewer
+cannot read off the diff` sounds AI-authored and confuses a human reader who
+opens the PR expecting a colleague's writing.
 
 ## Read the diff, don't imagine it
 
 `git diff <base>...HEAD` and `git log <base>..HEAD` before you write a word.
 
 Every claim in the body traces back to a line you read. A body that describes a
-change the diff does not contain costs the reviewer more than an empty body: they
-have to find the lie before they can start reviewing.
+change the diff does not contain costs the reviewer more than an empty body:
+they have to find the lie before they can start reviewing.
 
-## Red before green
-
-Your change needs one check that would have failed without it.
-
-Fixing a bug, that check is the reproduction from the ticket. Adding a feature, it
-is the test that calls the new behaviour. Run it against the old code first and
-watch it fail - **red**. Then run it against your change and watch it pass -
-**green**. A test that never failed proves nothing; it may be passing for reasons
-that have nothing to do with your work.
-
-Name that test in the body so the reviewer can run it themselves.
-
-Nothing here can be tested, because it is docs, config, or a rename? Say what you
-did instead: the page you loaded, the command you ran, the output you compared.
-
-## Report what you ran, not what should pass
-
-"Ran `pnpm test src/upload.test.ts`, 14 passed, 0 failed" is a fact a reviewer can
-check. "Tests should pass" is a wish.
-
-Only facts go in the body. Did not run it? Write that down. An honest gap is
-cheap; a confident claim that turns out false costs the reviewer their afternoon
-and costs you their trust.
+Reading the diff also settles which Notes are real. If a bullet you drafted for
+Notes turns out to sit in plain view of the diff, it fails the test and comes out.
 
 ## The title becomes history
 
@@ -68,11 +57,12 @@ Your title is the line the squashed merge commit carries, so write it for
 
 ## Link the ticket
 
-`Closes #123` in the body, so merging closes the ticket. Reference the ticket by
-ID rather than pasting a link: some trackers put private detail in the URL.
+`Closes #123` at the bottom of the body, so merging closes the ticket. Reference
+the ticket by ID rather than pasting a link: some trackers put private detail in
+the URL.
 
-No ticket exists? A one-line PR body that repeats what a ticket would have said is
-fine. Do not open a ticket just to link it.
+No ticket exists? A one-line PR body — just the **Why** — is fine. Do not open a
+ticket just to link it.
 
 ## Length
 
@@ -84,8 +74,8 @@ two things at once, and they will do both worse.
 ### 1. Check where you are
 
 You need a branch that is not the default one, and a clean tree with your work
-committed. On the default branch, or holding uncommitted changes? Say so and stop.
-Committing is `/git-commit`.
+committed. On the default branch, or holding uncommitted changes? Say so and
+stop. Committing is `/git-commit`.
 
 **Done when:** you know the base branch, the current branch, and that nothing is
 uncommitted.
@@ -94,28 +84,25 @@ uncommitted.
 
 The diff, the log, and the ticket it closes.
 
-**Done when:** you can answer the three questions from what you read, without
-guessing at intent.
+**Done when:** you can state the trigger for the change, and every Note you plan
+to include, from what you read.
 
-### 3. Run the check
+### 3. Draft the body
 
-Run the tests that cover the change, and paste real output. Red before green for
-a bug fix.
+Title, then **Why**, then **Notes** if any survive the diff-alone test, then the
+ticket line. Skip empty sections rather than filling them.
 
-**Done when:** you have a command and its result to put in the body, or a written
-reason you have neither.
+### 4. Clean it up
 
-### 4. Draft the body
+Run the draft through `/writing-for-humans`: the title, the evidence, the secrets
+check, and the humanizer pass. Two extra tells in a pull request:
 
-Title, then the three answers. Only the parts that carry something.
+- A bullet per file that only restates the filename.
+- A section titled with the check the reviewer is being asked to do rather than
+  the thing they are being told (`What changed`, `How you know`, `Verification`).
+  Rename to a human heading, or if the section only restated the diff, cut it.
 
-### 5. Clean it up
-
-Run the draft through `/writing-for-humans` skill: the title, the evidence, the secrets
-check, and the humanizer pass. One extra tell in a pull request: a bullet per file
-that only restates the filename. Cut those.
-
-### 6. Show it, then open it
+### 5. Show it, then open it
 
 Print the title and body. On the go-ahead, push the branch and open the pull
 request **as a draft**:
@@ -137,8 +124,8 @@ GitHub through the `gh` CLI is the fallback. Before you settle for it, check
 `glab mr create`.
 
 A repo pull request template at `.github/pull_request_template.md` is the house
-style, and it wins. Fill its sections and put the three answers inside them.
-Sections that do not apply to this change come out rather than getting padded.
+style, and it wins. Fill its sections; sections that do not apply to this change
+come out rather than getting padded.
 
 ## Boundaries
 
