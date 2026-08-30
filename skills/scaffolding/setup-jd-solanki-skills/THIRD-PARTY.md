@@ -11,3 +11,10 @@
   - [context7-cli](https://github.com/upstash/context7/tree/master/skills/context7-cli)
 - [varlock](https://varlock.dev/guides/ai-tools/)
   - [MCP](https://varlock.dev/guides/mcp/)
+- [Cloudflare](https://github.com/cloudflare/skills)
+  - cloudflare
+  - cloudflare-email-service
+  - cloudflare-one
+  - durable-objects
+  - workers-best-practices
+  - wrangler
