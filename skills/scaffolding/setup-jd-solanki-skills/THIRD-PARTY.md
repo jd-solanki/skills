@@ -18,3 +18,4 @@
   - durable-objects
   - workers-best-practices
   - wrangler
+  - More as per project...
