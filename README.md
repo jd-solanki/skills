@@ -1,5 +1,13 @@
 # JD Solanki's AI Agent Skills
 
+<a href="https://skilld.dev/gh/jd-solanki/skills">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://skilld.dev/b/jd-solanki/skills?theme=dark">
+    <source media="(prefers-color-scheme: light)" srcset="https://skilld.dev/b/jd-solanki/skills?theme=light">
+    <img alt="Skill repository on skilld.dev" src="https://skilld.dev/b/jd-solanki/skills?theme=light">
+  </picture>
+</a>
+
 ## Setup
 
 1. Run the skills.sh installer:
