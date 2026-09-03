@@ -1,0 +1,303 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: |
+  Alarms when a function calls the wrong environment of an external system.
+
+  A service picks a staging or a production target from configuration. Getting it
+  wrong is silent — the call succeeds, nothing errors, nothing lands in a DLQ — so
+  real data goes to the wrong environment with every dashboard still green.
+
+  This watches the running code rather than the configuration. The shared API
+  client logs "target=<value>" on every request, and that log line is the only
+  place the effective target appears. See ENVIRONMENT_GUARD_ARCHITECTURE.md.
+
+  Two alarms. WrongTargetCallsAlarm is the standing signal and owns the recovery
+  notification. StillCallingWrongTargetReminderAlarm nags on a clock while the
+  function is still wrong, because a CloudWatch alarm notifies only on a state
+  change.
+
+Parameters:
+  ResourceName:
+    Type: String
+    Description: Kebab-case name of the guarded function, used in the metric name
+  LogGroupName:
+    Type: String
+    Description: >-
+      Log group to watch. It must already exist when this template deploys —
+      AWS::Logs::MetricFilter cannot attach to a missing group. Callers using
+      queue-triggered-lambda.yml should pass its LogGroupName output.
+  ExpectedTarget:
+    Type: String
+    Description: >-
+      The environment this function is supposed to call. The filter hunts for the
+      OTHER one, so this is the only value a caller has to get right. Keep it
+      beside the function's own target configuration so one diff shows both.
+    AllowedValues:
+      - staging
+      - production
+  AlarmSNSTopicArn:
+    Type: String
+    Description: SNS topic that receives both the alarm and the recovery notification
+
+  ReminderIntervalHours:
+    Type: String
+    Description: >-
+      How often to re-notify while this function is still calling the wrong
+      target, in hours. "0" turns the reminder off.
+      The list of values is short because the alarm tells the time by reading the
+      clock on each datapoint, exactly as dlq.yml does. An interval works only if
+      it divides 24 exactly, or if it is 168 for once a week. 48 is not on the
+      list: two days does not divide into a seven-day week, so the gap would
+      stretch or shrink at every week boundary.
+    # One a day is enough: the standing alarm already fires the moment the first
+    # wrong call goes out. This only stops a long incident going quiet.
+    Default: "24"
+    AllowedValues:
+      - "0"
+      - "4"
+      - "6"
+      - "8"
+      - "12"
+      - "24"
+      - "168"
+  ReminderHourUTC:
+    Type: String
+    Description: >-
+      UTC hour the reminder is sent, two digits.
+      Used only when ReminderIntervalHours is "24" or "168". The shorter cadences
+      fire on fixed hours that cannot be moved, because CloudFormation cannot do
+      the arithmetic to shift a whole chain of hours. Read the alarm description
+      in the console to see the schedule you got.
+      There is no minute parameter: the reminder metric is aggregated hourly, so
+      every datapoint is stamped on the hour and MINUTE() is always 0.
+    Default: "00"
+    AllowedValues:
+      - "00"
+      - "01"
+      - "02"
+      - "03"
+      - "04"
+      - "05"
+      - "06"
+      - "07"
+      - "08"
+      - "09"
+      - "10"
+      - "11"
+      - "12"
+      - "13"
+      - "14"
+      - "15"
+      - "16"
+      - "17"
+      - "18"
+      - "19"
+      - "20"
+      - "21"
+      - "22"
+      - "23"
+
+Mappings:
+  # Metric math has no modulo operator, so each cadence is spelled out as an
+  # explicit OR chain of UTC hours rather than HOUR(calls) % interval == 0.
+  # See ReminderIntervalHours above for why the value list is short.
+  # Anchor these on the same hours as any other reminder alarm in the stack, so
+  # a stack running several sends them together instead of at unrelated times.
+  # HOUR() and DAY() are always UTC with no time zone option, so the local send
+  # time shifts by an hour at each daylight-saving change.
+  ReminderExpression:
+    "4":
+      Value: "IF((HOUR(calls) == 0 OR HOUR(calls) == 4 OR HOUR(calls) == 8 OR HOUR(calls) == 12 OR HOUR(calls) == 16 OR HOUR(calls) == 20) AND calls > 0, 1, 0)"
+    "6":
+      Value: "IF((HOUR(calls) == 4 OR HOUR(calls) == 10 OR HOUR(calls) == 16 OR HOUR(calls) == 22) AND calls > 0, 1, 0)"
+    "8":
+      Value: "IF((HOUR(calls) == 0 OR HOUR(calls) == 8 OR HOUR(calls) == 16) AND calls > 0, 1, 0)"
+    "12":
+      Value: "IF((HOUR(calls) == 4 OR HOUR(calls) == 16) AND calls > 0, 1, 0)"
+    # The three rows below are never read. "0" creates no alarm at all, and "24"
+    # and "168" build their expression from ReminderHourUTC with !Sub instead.
+    #
+    # They must still exist. CloudFormation resolves Fn::FindInMap eagerly, even
+    # inside the Fn::If branch it does not take, so a missing key fails the deploy
+    # outright with "Unable to get mapping for ReminderExpression::24::Value".
+    # cfn-lint does not catch it, and neither does a --no-execute-changeset: a
+    # nested stack is only validated when the parent actually executes.
+    #
+    # Invariant: every AllowedValue of ReminderIntervalHours needs a row here.
+    "0":
+      Value: "IF(calls < 0, 1, 0)"
+    "24":
+      Value: "IF(calls < 0, 1, 0)"
+    "168":
+      Value: "IF(calls < 0, 1, 0)"
+
+Conditions:
+  ExpectsProduction: !Equals [!Ref ExpectedTarget, production]
+  CreateReminderAlarm: !Not [!Equals [!Ref ReminderIntervalHours, "0"]]
+  # "24" and "168" fire once per cycle, so their single send hour can come
+  # straight from ReminderHourUTC instead of a mapping row.
+  SingleShotCadence: !Or
+    - !Equals [!Ref ReminderIntervalHours, "24"]
+    - !Equals [!Ref ReminderIntervalHours, "168"]
+  WeeklyCadence: !Equals [!Ref ReminderIntervalHours, "168"]
+
+Resources:
+  # The client logs "target=<value>" on every request. That token is the only
+  # runtime record of which environment a function is using, and it is written here
+  # once so no caller repeats it. Change the token text in the client and this
+  # filter silently stops matching, which looks exactly like everything being fine.
+  #
+  # A token rather than the external hostname, deliberately. Hostnames would work,
+  # but they change independently of you, and a filter that matches nothing is
+  # indistinguishable from a filter that finds nothing wrong. The token also cannot
+  # be matched by accident: a metric filter matches ANY line in the group, and
+  # handlers that log request payloads or response bodies will eventually log a URL.
+  #
+  # Filter patterns are exact substrings and case sensitive.
+  #
+  # DefaultValue is what publishes a 0 when nothing matched. Without it the metric
+  # goes blank instead of zero, the alarm sits in INSUFFICIENT_DATA rather than OK,
+  # and the recovery notification never arrives. It is also why the metric name
+  # carries ResourceName instead of the function being a dimension: CloudWatch does
+  # not allow a default value on a metric filter that assigns dimensions.
+  WrongTargetCallsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref LogGroupName
+      FilterPattern: !If
+        - ExpectsProduction
+        - '"target=staging"'
+        - '"target=production"'
+      MetricTransformations:
+        - MetricName: !Sub "${ResourceName}-wrong-target-calls"
+          MetricNamespace: EnvironmentGuard
+          MetricValue: "1"
+          DefaultValue: 0
+
+  # The evaluation window is the whole point of this block, so read it before
+  # changing it. Event-driven traffic is bursty. With a one-minute window the alarm
+  # would flip to ALARM on a bad minute and back to OK on the next quiet minute,
+  # sending a "recovered" that is a lie while records keep going to the wrong
+  # environment — and an alarm that cries wolf gets filtered into a folder.
+  #
+  # So: one breaching minute anywhere in the last hour holds the alarm in ALARM
+  # (DatapointsToAlarm 1 of EvaluationPeriods 60). Detection is still within about
+  # two minutes, but OK needs sixty consecutive clean minutes, which makes the
+  # recovery notification mean something.
+  #
+  # OKActions is deliberate for that reason. Contrast the reminder alarm below,
+  # which omits them because it returns to OK at the end of every cycle by design.
+  WrongTargetCallsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub >-
+        ${ResourceName} must call the ${ExpectedTarget} environment but is calling
+        the other one. Records written while this is firing went to the wrong
+        environment.
+      Namespace: EnvironmentGuard
+      MetricName: !Sub "${ResourceName}-wrong-target-calls"
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 60
+      DatapointsToAlarm: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+
+  # WrongTargetCallsAlarm notifies once, on the transition into ALARM, and then
+  # goes quiet: CloudWatch runs actions only on a state change, and that alarm is
+  # built to hold ALARM for as long as the function keeps missing. This alarm
+  # supplies the transitions it cannot make. The expression is 1 during a reminder
+  # hour that saw wrong-target traffic and 0 the rest of the time, so it cycles
+  # OK -> ALARM -> OK once per interval while the fault is still live — one message
+  # per cycle, whether the function misdirected one record or a thousand.
+  #
+  # Period 3600 is the one thing here that must NOT be copied from a queue-depth
+  # reminder such as dlq.yml, so read this before shrinking it. Queue depth is a
+  # LEVEL: it stays above zero continuously while the queue is dirty, so any clock
+  # tick at all can observe the fault. This metric is a RATE — wrong-target calls
+  # counted per period — and it reads 0 in every period that simply had no traffic,
+  # however wrong the configuration is. Copied at a five-minute period, the
+  # reminder would only fire when a wrong-target call happened to land in the same
+  # five minutes as the clock tick, and would miss most cycles of a fault that
+  # never goes away.
+  #
+  # An hour of Sum is the window because it asks the question the reminder actually
+  # means: did anything at all go to the wrong environment in this whole hour? A
+  # live incident cannot hide from that. An hour with no datapoints means nothing
+  # was processed, so nothing went anywhere and there is nothing to remind about;
+  # that is what TreatMissingData notBreaching encodes. The residual gap is an hour
+  # that is genuinely idle, which skips that one cycle and leaves the next one to
+  # carry the reminder. WrongTargetCallsAlarm stays red throughout either way: it
+  # is the standing signal, and this is only the nag.
+  #
+  # The hourly period is also why there is no minute parameter beside
+  # ReminderHourUTC. Hourly datapoints are stamped on the hour, so MINUTE() is
+  # always 0 and a MINUTE(...) >= N test would silently never fire.
+  #
+  # No OKActions: this alarm returns to OK at the end of every reminder hour by
+  # design, and wiring them would double the mail. WrongTargetCallsAlarm above owns
+  # the recovery notification.
+  StillCallingWrongTargetReminderAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: CreateReminderAlarm
+    Properties:
+      AlarmDescription: !If
+        - SingleShotCadence
+        - !Sub >-
+          ${ResourceName} is STILL calling the wrong environment instead of
+          ${ExpectedTarget} (reminder every ${ReminderIntervalHours}h at
+          ${ReminderHourUTC}:00 UTC).
+        - !Sub >-
+          ${ResourceName} is STILL calling the wrong environment instead of
+          ${ExpectedTarget} (reminder every ${ReminderIntervalHours}h, on fixed
+          UTC hours).
+      Metrics:
+        - Id: calls
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: EnvironmentGuard
+              MetricName: !Sub "${ResourceName}-wrong-target-calls"
+            Period: 3600
+            Stat: Sum
+        - Id: reminder
+          Label: Still calling the wrong environment
+          ReturnData: true
+          Expression: !If
+            - SingleShotCadence
+            - !If
+              - WeeklyCadence
+              - !Sub "IF(DAY(calls) == 1 AND HOUR(calls) == ${ReminderHourUTC} AND calls > 0, 1, 0)"
+              - !Sub "IF(HOUR(calls) == ${ReminderHourUTC} AND calls > 0, 1, 0)"
+            - !FindInMap [ReminderExpression, !Ref ReminderIntervalHours, Value]
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+
+Outputs:
+  AlarmName:
+    Description: >-
+      Generated name of the CloudWatch alarm that fires while the function calls the
+      wrong environment. The alarm is deliberately unnamed in the template so a
+      replacement cannot collide with itself; this output is how you find it.
+    Value: !Ref WrongTargetCallsAlarm
+
+  MetricName:
+    Description: Custom metric counting calls to the wrong environment
+    Value: !Sub "${ResourceName}-wrong-target-calls"
+
+  ReminderAlarmName:
+    Condition: CreateReminderAlarm
+    Description: >-
+      Generated name of the CloudWatch alarm that re-notifies on a fixed clock while
+      the function is still calling the wrong environment. Absent when
+      ReminderIntervalHours is "0".
+    Value: !Ref StillCallingWrongTargetReminderAlarm
