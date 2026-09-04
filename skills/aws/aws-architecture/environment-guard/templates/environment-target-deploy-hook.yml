@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Reports when a CloudFormation deploy moves a function between environments.
+
+  The runtime guard (environment-target-guard.yml) watches the running code and
+  catches a wrong target the moment a record is written to it. It needs traffic to
+  notice, so it is blind to a flip that ships to a function which then sits idle.
+  This runs on the deploy, before anything is provisioned, and needs no traffic.
+
+  Neither is a superset of the other. See ENVIRONMENT_GUARD_ARCHITECTURE.md.
+
+  Nest this from the same stack whose deploys it should watch.
+
+Parameters:
+  CodeUri:
+    Type: String
+    Description: >-
+      Path to deploy_hook/. SAM resolves it relative to THIS file's directory, not
+      the calling template's, so a caller in a sibling directory passes a path
+      relative to wherever this template was copied.
+  WatchedStackName:
+    Type: String
+    Description: >-
+      The stack whose deploys this hook evaluates. Pass the caller's own
+      AWS::StackName to watch the stack the hook lives in.
+      Must match ^[a-zA-Z][-a-zA-Z0-9]*$.
+  AlertTopicArn:
+    Type: String
+    Description: SNS topic that receives the notification
+  HookAlias:
+    Type: String
+    Description: >-
+      Registry alias for the hook. Three alphanumeric segments — a stack name with a
+      hyphen in it will be rejected at activation, so this cannot be derived from
+      AWS::StackName.
+    Default: Private::Deploy::EnvironmentTargetChange
+
+Resources:
+  HookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Reports when a deploy changes which environment a function talks to
+      CodeUri: !Ref CodeUri
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.13
+      MemorySize: 128
+      # A hook invocation is capped at 30 seconds by CloudFormation. 20 leaves margin,
+      # and the function's boto3 client sets short timeouts of its own so a slow SNS
+      # call cannot eat the whole budget and get the function killed mid-publish —
+      # which is what would make CloudFormation retry and notify twice.
+      Timeout: 20
+      Environment:
+        Variables:
+          ALERT_TOPIC_ARN: !Ref AlertTopicArn
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: sns:Publish
+              Resource: !Ref AlertTopicArn
+      LoggingConfig:
+        LogGroup: !Ref HookLogGroup
+
+  HookLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 365
+
+  # CloudFormation assumes this to invoke the hook. It is not the function's own
+  # execution role, which is what grants the sns:Publish the hook actually uses.
+  HookInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: hooks.cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeEnvironmentTargetHook
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt HookFunction.Arn
+
+  # TargetOperations is STACK rather than RESOURCE on purpose. The values live in the
+  # parent template as parameters passed down to nested stacks, so the parent already
+  # carries them; a resource-target hook would have to reach inside nested stacks,
+  # which AWS documents neither way. Targeting the stack also sidesteps the second
+  # undocumented question, whether Lambda environment variable values survive into a
+  # hook payload at all.
+  #
+  # FailureMode WARN is load-bearing, not a preference. It makes a finding a nudge
+  # instead of a gate, and it keeps the watched stack deletable: a delete fires the
+  # hook, and if the function or its role is already gone, WARN turns that failed
+  # invocation into a warning rather than a block. FAIL would put the stack one broken
+  # Lambda away from being undeletable.
+  #
+  # StackFilters scopes this to one stack. Activation is per account and Region, so
+  # without the filter the hook would run on every stack operation in the account.
+  # Note this inverts the example in the AWS docs, which excludes the hook's own stack
+  # — that pattern is for a hook policing OTHER stacks. This one watches the stack it
+  # is deployed alongside, so Include is the point.
+  #
+  # The hook does not evaluate the deploy that creates it: the resource does not exist
+  # yet when that update's hooks fire. It starts working from the next deploy onward.
+  Hook:
+    Type: AWS::CloudFormation::LambdaHook
+    Properties:
+      Alias: !Ref HookAlias
+      LambdaFunction: !GetAtt HookFunction.Arn
+      ExecutionRole: !GetAtt HookInvokeRole.Arn
+      FailureMode: WARN
+      HookStatus: ENABLED
+      TargetOperations:
+        - STACK
+      StackFilters:
+        FilteringCriteria: ANY
+        StackNames:
+          Include:
+            - !Ref WatchedStackName
+
+Outputs:
+  HookFunctionName:
+    Description: Name of the Lambda that evaluates each deploy
+    Value: !Ref HookFunction
+
+  HookFunctionArn:
+    Description: >-
+      ARN of the hook Lambda. Attach an error alarm to it in the calling stack — an
+      init-time failure is the one breakage the hook cannot report itself.
+    Value: !GetAtt HookFunction.Arn
