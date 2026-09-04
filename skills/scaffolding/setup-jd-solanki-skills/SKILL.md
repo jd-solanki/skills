@@ -23,7 +23,7 @@ The block:
 
 - Do not manually edit files managed by CLI tools. E.g. skills-lock.json, pnpm-lock.yml, etc
 - When creating .md file, if you find something can be visualized for reader's understanding do create visualization block using mermaid. This also applies to markdown supporting operations like GH issue or comments or form submissions which support markdown content.
-    - For GH issues & PR, also create this visualization block on top somewhere so they can easily understand via visualization.
+  - For GH issues & PR, also create this visualization block on top somewhere so they can easily understand via visualization.
 
 ## Core Engineering Principles
 
