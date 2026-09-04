@@ -17,19 +17,44 @@ CloudTrail. The effective target has to be logged by the code that uses it.
 
 ## The pattern
 
+Two layers, watching from different vantage points.
+
 ```mermaid
 flowchart LR
-    C[Shared API client<br/>logs target token<br/>on every request] --> LG[(CloudWatch<br/>Log Group)]
-    LG --> MF[Metric filter<br/>counts calls to the<br/>WRONG target]
-    MF --> M[Custom metric]
-    M --> A[Standing alarm<br/>fires + recovers]
-    M --> R[Reminder alarm<br/>nags while still wrong]
-    A --> SNS[SNS topic → email]
+    subgraph runtime [Runtime guard - watches the code]
+        C[Shared API client<br/>logs target token<br/>on every request] --> LG[(CloudWatch<br/>Log Group)]
+        LG --> MF[Metric filter<br/>counts calls to the<br/>WRONG target]
+        MF --> A[Standing alarm]
+        MF --> R[Reminder alarm]
+    end
+    subgraph deploy [Deploy guard - watches the change]
+        H[CloudFormation hook<br/>diffs deployed vs<br/>proposed template]
+    end
+    A --> SNS[SNS topic]
     R --> SNS
+    H --> SNS
 ```
 
-Each guarded function gets its own log group, metric filter, metric and alarms. The
-guard declares the target it **expects**; the filter hunts for every other one.
+The runtime guard answers *are records going to the wrong place right now*. The
+deploy guard answers *is a change about to move them*. Build the runtime guard first:
+it is the one that measures actual harm and hands you the list of affected records.
+
+## Two vantage points, and why you need both
+
+Neither layer is a superset of the other. This table is the argument for keeping both,
+and the thing to re-read before deleting either.
+
+| How the target goes wrong | Deploy guard | Runtime guard |
+|---|---|---|
+| A committed template change | catches, before provisioning | catches, seconds after the first call |
+| A console or CLI edit of the value | blind — nothing goes through CloudFormation | catches |
+| Someone edits the target URLs in the shared client | blind — the template is unchanged | catches |
+| A typo that silently falls back to the default | sees *a* change, cannot know the fallback | catches the real target |
+| A value set on a function whose code ignores it | reports a change that never took effect | reports reality |
+| A flip deployed to a function that then stays idle | catches | blind — no calls to count |
+
+The last row is the whole reason the deploy guard exists. The three rows above it are
+the whole reason it cannot replace the runtime guard.
 
 ## Key rules
 
@@ -75,6 +100,40 @@ The complete nested stack is
 [`templates/environment-target-guard.yml`](templates/environment-target-guard.yml).
 See [REFERENCE.md](REFERENCE.md) for the client hook that emits the token, and for how
 the guard composes with a queue-triggered function template.
+
+## The deploy guard
+
+A CloudFormation hook, WARN mode, targeting the stack.
+[`templates/environment-target-deploy-hook.yml`](templates/environment-target-deploy-hook.yml)
+and [`templates/deploy_hook/`](templates/deploy_hook/) are the whole thing; the
+decisions behind each property are commented where the property is. Four of them are
+choices you have to make rather than settings you copy:
+
+- **Target the stack, not the resource.** The values usually reach a function as
+  parameters passed down from a parent template, so the parent already carries them.
+  A resource-target hook would have to reach inside nested stacks, which AWS does not
+  document either way — and it would also depend on Lambda environment variable values
+  surviving into the payload, which AWS does not document either. Targeting the stack
+  sidesteps both unknowns.
+- **Compare in document order, never as counts.** Counting values hides the case the
+  hook exists to catch: two functions swapping environments in one deploy leaves the
+  totals identical, so a count-based check stays silent while both are now writing to
+  the wrong place. Ordered comparison reports both halves. It costs one spurious nudge
+  when somebody genuinely reorders the template, which is the cheap direction to err.
+- **Fail visible, not open.** A hook must never block a deploy, so the instinct is to
+  swallow every error and return success. Do the opposite: report the hook's own
+  breakage as a finding. Under WARN a finding still cannot block anything, and it puts
+  the failure in the stack events where somebody is already looking. This matters more
+  than it sounds — an exception caught inside the handler records no Lambda error, so
+  the function's error alarm never fires, and a swallowed failure reaches nobody at
+  all. Include a check for the pattern matching *nothing*: a monitor whose breakage
+  looks like its silence is the exact failure this whole feature exists to catch.
+- **Deduplicate the notification yourself.** CloudFormation retries a hook up to three
+  times, and a publish that succeeded before the response was lost will be sent again.
+  `requestContext.invocation` is 1 on the first attempt; notify only then.
+
+One thing to expect rather than debug: the hook does not evaluate the deploy that
+creates it, so it starts working from the next one.
 
 ## The reminder alarm
 
