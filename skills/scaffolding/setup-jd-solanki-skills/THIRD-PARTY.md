@@ -2,6 +2,10 @@
 
 > Collection of third-party skills and AI resources that I mostly use in my projects.
 
+- [Ponytail](https://github.com/DietrichGebert/ponytail/tree/main/skills)
+  - ponytail
+  - ponytail-review
+  - ponytail-audit
 - [mattpocock/skills](https://github.com/mattpocock/skills)
 - [nostics](https://github.com/vercel-labs/nostics)
 - [better-auth](https://better-auth.com/docs/ai-resources/skills)
