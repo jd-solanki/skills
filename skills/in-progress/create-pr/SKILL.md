@@ -105,10 +105,9 @@ check, and the humanizer pass. Two extra tells in a pull request:
   than the thing they are being told (`How you know`, `Verification`). Name it for
   the thing, or cut it if it only restated the diff.
 
-### 5. Show it, then open it
+### 5. Open it
 
-Print the title and body. On the go-ahead, push the branch and open the pull
-request **as a draft**:
+Push the branch and open the pull request **as a draft**:
 
 ```shell
 gh pr create --draft --base <base> --title "<title>" --body "<body>"
