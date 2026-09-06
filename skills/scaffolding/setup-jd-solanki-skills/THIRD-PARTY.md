@@ -14,7 +14,6 @@
 - [Cloudflare](https://github.com/cloudflare/skills)
   - cloudflare
   - cloudflare-email-service
-  - cloudflare-one
   - durable-objects
   - workers-best-practices
   - wrangler
