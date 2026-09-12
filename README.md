@@ -13,7 +13,35 @@
     - Upsert instructions into your `CLAUDE.md` or `AGENTS.md` file(s) for how to load and use these skills.
     - Suggest you install and use third-party skills that I mostly use in my projects. See [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md) for a list of third-party skills.
 4. Bam - you're ready to go.
+5. Run `/setup-project-context` to give the agent this repo's own context — its words, rules, reasons, and the fences it must not walk into.
+
+## Context engineering
+
+An agent arrives holding coding guidelines and nothing else. `/setup-project-context` gives it the rest, split by **domain** so a task loads only what it needs:
+
+| File | Reader | Loads |
+| --- | --- | --- |
+| `AGENTS.md` / `CLAUDE.md` | agent | every turn — behaviour and one gate |
+| `CONTRIBUTING.md` | humans and agents | every session — what the project is and its status |
+| `/project-context` | agent | every session — the rules and the routing table |
+| `domains/<domain>.md` | agent | only when a task enters that domain |
+| `README.md` | humans | never read by an agent |
+
+`/audit-project-context` runs at the end of a pull request and trims whatever the week's work added that the code could have said itself.
+
+The reasoning behind all of it — why domain and not document type, why the glossary left the repo root, why setup and audit are two skills — is in [`docs/context-engineering.md`](./docs/context-engineering.md).
 
 ## Tips
 
 - Use global instruction files (`~/.claude/CLAUDE.md` & `~/.codex/AGENTS.md`) for behavioural changes and use project instructions for working instructions.
+
+## Forked skills
+
+Skills taken from elsewhere and changed. They are maintained here now, so they live in their real category rather than under `third-party/`.
+
+- **[`skills/engineering/code-review`](./skills/engineering/code-review/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
+  The Standards axis reads `/project-context` instead of `CONTRIBUTING.md`, because this repo's rules live in domain files. The spec source uses `gh` directly, because `docs/agents/issue-tracker.md` is no longer part of the layout.
+- **[`skills/engineering/domain-modeling`](./skills/engineering/domain-modeling/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
+  The glossary moved from a root `CONTEXT.md` into `/project-context`, and the multi-context `CONTEXT-MAP.md` branch was dropped: a term used inside one domain now lives in that domain file's **Words**.
+
+Used unchanged, so not forked: `research`.
