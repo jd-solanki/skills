@@ -75,9 +75,14 @@ Fill the slots, send as one prompt.
     performance, accessibility, API and design, maintainability, tests, backward compatibility and
     missing validation. Challenge assumptions.
 
-    Trace the flow in source against the pinned dependency versions. If the range touches a
-    rendered surface, load the page and look — stacking-context and accessible-name defects are
-    invisible to a source read. The run skill launches the app; Playwright CLI drives it.
+    Trace the flow in source against the pinned dependency versions.
+
+    A range that touches a page or a component is reviewed in a browser as well as in source.
+    Load it, drive it, report what you saw. Stacking context, focus order, accessible names and
+    anything that streams are invisible to a source read, and a surface reviewed only in source
+    still reads as reviewed. The run skill launches the app and Playwright CLI drives it;
+    development mode pre-fills the credentials, so a signed-in page costs you nothing.
+    Every surface you could not exercise goes in "Not exercised" by name.
   </correctness>
 
   <simplicity>
@@ -117,6 +122,9 @@ Fill the slots, send as one prompt.
     - **Failure:** <input or state that breaks it; for simplicity, the cost paid>
     - **Fix:** <specific enough to need no further investigation>
 
+    ## Not exercised
+    <every surface you could not check, and why. "Nothing." only if you exercised all of them.>
+
   Then return one line and nothing else:
   <verdict> | N findings: B blocker, M major, m minor | round [N-1] fixes: X confirmed, Y broken
 
@@ -130,11 +138,15 @@ Fill the slots, send as one prompt.
 <role>
   Implementer for round [N].
   Invoke ponytail with args ultra: deletion before addition, shortest change that fully fixes.
+  Invoke /coding too. It is the standards the reviewer judged this range against, and the
+  standards next round's reviewer judges your fixes against. Write to the bar you will be read at.
 </role>
 
 <constraints>
   Directory: [path] — stay inside it. Earlier rounds are uncommitted: no git checkout, reset,
   stash, commit or push. Leave changes in the working tree.
+  `git add -N` every file you create, the moment you create it. `git diff` hides an untracked
+  file, so the range is missing it and next round's reviewer reads a file that is not there.
 </constraints>
 
 <task>
@@ -163,6 +175,12 @@ Fill the slots, send as one prompt.
 - **`/simplify` writes.** Keep the reviewer brief's override when you edit it.
 - **`Checks: pass` is a claim, not evidence.** Run them yourself — 3 of 15 fixes came back wrong in
   the reference run, 2 of them new bugs the review introduced.
-- **A two-ref diff hides the round.** `git diff <base> HEAD` skips every uncommitted fix.
+- **A two-ref diff hides the round.** `git diff <base> HEAD` skips every uncommitted fix, and an
+  untracked file is missing from the range whichever refs you pin. Check `git status` against the
+  range before you dispatch.
+- **A rendered surface skips itself.** Stated as a condition, the browser pass is the step the
+  reviewer drops under load. The reference run reached round 3 before anyone loaded the page, and
+  that one browser turn found the worst bug in the PR. "Not exercised" is what makes the skip
+  visible.
 - **A ledger inside the repo dirties `git status`,** which the implementer reads. The session
   scratchpad needs no `.gitignore` entry.
