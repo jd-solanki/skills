@@ -30,7 +30,7 @@ before.
 | Fix | implementer subagent | never verifies its own work |
 | Carry | you | dispatch, join, pass ledger paths |
 
-The prior ledger is the fresh reviewer's **oracle**: read before the code.
+The reviewer reads before it prescribes. Every Fix names a file the reviewer opened.
 
 ## Reviewer brief
 
@@ -93,7 +93,9 @@ Fill the slots, send as one prompt.
      one finding.
   3. Refute each finding — open the file and make it fail. Cannot? Drop it. Taste with no cost, and
      trade-offs the spec names, are not findings.
-  4. Rank by severity.
+  4. Open every file the Fix touches, plus the callers and the docs it cites, before you write the
+     Fix. A Fix for a file you never opened is a guess. Drop the finding or go read.
+  5. Rank by severity.
 </your-job>
 
 <output>
