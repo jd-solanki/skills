@@ -1,0 +1,177 @@
+# Templates
+
+Six files to write. Fill the slots. Keep the headings.
+
+Every one of them obeys the rule: a doc earns a line only if the code cannot say it.
+
+## 1. The gate — into `AGENTS.md` or `CLAUDE.md`
+
+Upsert between the markers. Nothing else in the file changes.
+
+```markdown
+<!-- project-context -->
+
+## Project context
+
+Before the first code action in a session: Read `CONTRIBUTING.md`, then invoke
+`/project-context`.
+
+`/project-context` holds this repository's words, rules, reasons and fences. Its table
+says which references your task needs. Emit the triage line, then Read those.
+
+<!-- project-context -->
+```
+
+## 2. `CONTRIBUTING.md`
+
+Humans and agents both read this one. It orients; it never explains code.
+
+```markdown
+# Contributing
+
+## What this is
+
+[Two or three sentences. What the project does and who it is for.]
+
+## Status
+
+[What works today. What is deliberately unbuilt, and why.]
+
+Fences and intentional gaps only. A feature checklist here goes stale within a week.
+
+## Conventions
+
+Every rule about the code lives in `/project-context`. Invoke it.
+
+## How to contribute
+
+- Branch from `[branch]`.
+- Commands: see the `scripts` block in `package.json`.
+- Commits: [convention, or the skill that owns it].
+- Pull requests: [what a PR needs before review].
+```
+
+## 3. `skills/internal/project-context/SKILL.md`
+
+Model-invoked. The agent has to reach it, so it carries a description and no
+`disable-model-invocation`.
+
+The router holds the rules and the table. It holds no prose.
+
+The rules block is why the rules live here: this file loads every session, so every
+agent that reads the context also reads the law for writing it. One copy, no extra
+cost. Copy it verbatim — it is the guardrail the whole system rests on.
+
+```markdown
+---
+name: project-context
+description: This repository's words, rules, reasons and fences. Invoke before the first code action in a session, and again when a task enters a new domain.
+---
+
+# Project context
+
+## What earns a line here
+
+- A **word** — a term whose meaning this project fixes.
+- A **rule** — a convention no linter or type checker enforces.
+- A **reason** — why this shape was chosen, when the code cannot show it.
+- A **fence** — the trap, where it bites (`file:line`), and why the fence stands.
+
+**The test: could I learn this by reading the code?** Then link the path under
+**Where it lives**. Leave the prose out.
+
+Git holds the history and `package.json` holds the commands. Both are sources of
+truth already; point at them.
+
+Past ~150 lines, a file is two domains, or it is restating code. Split it or cut it.
+
+`/audit-project-context` enforces all of the above.
+
+## References
+
+Load `glossary.md` every session. Load a domain file when your task enters it.
+
+| Reference | Load when |
+| --- | --- |
+| `glossary.md` | always |
+| `domains/[domain].md` | [the tasks that need it] |
+```
+
+## 4. `glossary.md`
+
+The words used **across** domains. A term that only matters inside one domain belongs
+in that domain file's **Words** section, so a task that never enters the domain never
+pays for it.
+
+```markdown
+# Glossary
+
+[One or two sentences: what this project is, in its own vocabulary.]
+
+**[Term]**:
+[One or two sentences. What it IS, not what it does.]
+_Avoid_: [the words this one replaces]
+```
+
+Rules:
+
+- **Be opinionated.** Where several words exist for one concept, pick one and list the
+  rest under `_Avoid_`.
+- **Keep definitions tight.** One or two sentences.
+- **Project terms only.** Timeouts, error types and utility patterns are general
+  programming, not this project's language.
+- No implementation detail and no decisions. Those are **Reasons** and **Fences**.
+
+## 5. `domains/<domain>.md`
+
+One file per domain. Five sections. A section with nothing true in it gets deleted,
+not padded.
+
+```markdown
+# [Domain]
+
+load-when: [the tasks that need this file]
+
+## Words
+
+**[Term]**: [what it is, in this domain only]
+
+## Rules
+
+- [How work is done here.]
+
+## Reasons
+
+- [Why this shape, in one or two sentences. Link the ADR or investigation behind it.]
+
+## Fences
+
+- **[The trap.]** [What it breaks, and why the fence stands.] `path/to/file.ts:42`
+
+## Where it lives
+
+`[path]`, `[path]`, `[path]`
+```
+
+A fence is worth more than a rule. It is the thing that bites, and the code never
+confesses it. When a section runs long, ask whether it is restating code that the
+**Where it lives** paths already hold.
+
+## 6. `README.md`
+
+Humans only. Agents never read it for context.
+
+```markdown
+# [Project]
+
+[One or two sentences.]
+
+## Setup
+
+[The commands to get running.]
+
+## More
+
+- Contributing and project status: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Commands: the `scripts` block in [`package.json`](./package.json)
+```
