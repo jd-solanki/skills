@@ -52,7 +52,8 @@ Fill the slots, send as one prompt.
   Directory: [path] — stay inside it.
   Range: [range]
   Spec: [path]
-  Repo docs the range touches: CLAUDE.md, CONTEXT.md, docs/agents/*.md
+  Repo docs the range touches: CLAUDE.md, CONTRIBUTING.md, and the /project-context
+  references whose load-when matches the range
 </context>
 
 <prior-rounds>
