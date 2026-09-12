@@ -104,8 +104,8 @@ Return the link.
 GitHub through the `gh` CLI is the fallback. Before you settle for it, check in
 this order:
 
-1. **A recorded choice.** `docs/agents/issue-tracker.md`, or a tracker named in
-   `CLAUDE.md` / `AGENTS.md`. A written answer beats anything you sniff.
+1. **A recorded choice.** A tracker named in `/project-context` — its workflow domain —
+   or in `CLAUDE.md` / `AGENTS.md`. A written answer beats anything you sniff.
 2. **`git remote -v`.** GitLab takes the `glab` CLI. No remote at all, or a
    `.scratch/` folder already in use, means issues live as markdown in the repo.
 3. **Your tool list.** Find a tracker with ToolSearch (`linear`, `atlassian jira`).
