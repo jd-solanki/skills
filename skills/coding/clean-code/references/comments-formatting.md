@@ -2,23 +2,19 @@
 
 Comprehensive guide to comment discipline and code formatting. Based on Robert C. Martin's *Clean Code*, Chapters 4 and 5.
 
-
 ## Table of Contents
+
 1. [The Truth About Comments](#the-truth-about-comments)
 2. [Good Comments](#good-comments)
 3. [Bad Comments](#bad-comments)
 4. [Formatting](#formatting)
 5. [When Comments Are Truly Necessary](#when-comments-are-truly-necessary)
 
----
-
 ## The Truth About Comments
 
 **Don't comment bad code -- rewrite it.** Comments are, at best, a necessary evil. The proper use of comments is to compensate for our failure to express ourselves in code. Every time you write a comment, you should grimace and feel the failure of your ability of expression.
 
 Comments lie. Not always, and not intentionally, but too often. Code changes and evolves; comments don't always follow. The older a comment is and the farther it is from the code it describes, the more likely it is to be wrong.
-
----
 
 ## Good Comments
 
@@ -81,6 +77,7 @@ def get_user_preferences(user_id):
 ```
 
 **Rules for TODOs:**
+
 - Include a ticket number or issue reference
 - Scan and resolve them regularly (they are not permanent)
 - Never use TODO as an excuse to leave broken code
@@ -96,8 +93,6 @@ String listItemContent = match.group(3).trim();
 // that would cause the item to be recognized as another list.
 new ListItemWidget(this, listItemContent, this.level + 1);
 ```
-
----
 
 ## Bad Comments
 
@@ -239,162 +234,12 @@ If you need comments to track closing braces, your function is too long. Extract
 
 Version control tracks authorship more reliably. Use `git blame`.
 
----
-
-## Formatting
-
-### Why Formatting Matters
-
-Code formatting is about communication, and communication is the professional developer's first order of business. The formatting of your code communicates important information long after the original developer has moved on.
-
-### Vertical Formatting
-
-#### The Newspaper Metaphor
-
-Source files should be organized like a newspaper article:
-- **Name** should be simple but explanatory (the headline)
-- **Top** should provide high-level concepts and algorithms (the synopsis)
-- **Bottom** should contain the lowest-level functions and details (the body)
-
-#### Vertical Openness Between Concepts
-
-Each group of related lines represents a complete thought. Separate thoughts with blank lines.
-
-```python
-# GOOD: Blank lines separate concepts
-import os
-import sys
-
-from myapp.models import User
-from myapp.services import EmailService
-
-
-class UserRegistration:
-
-    def __init__(self, email_service):
-        self.email_service = email_service
-
-    def register(self, name, email):
-        user = User.create(name=name, email=email)
-        self.email_service.send_welcome(user)
-        return user
-```
-
-```python
-# BAD: Everything runs together
-import os
-import sys
-from myapp.models import User
-from myapp.services import EmailService
-class UserRegistration:
-    def __init__(self, email_service):
-        self.email_service = email_service
-    def register(self, name, email):
-        user = User.create(name=name, email=email)
-        self.email_service.send_welcome(user)
-        return user
-```
-
-#### Vertical Density
-
-Lines that are tightly related should appear close together vertically. Don't insert blank lines between closely related lines.
-
-```java
-// BAD: Useless comments break vertical density
-public class ReporterConfig {
-
-    /**
-     * The class name of the reporter listener
-     */
-    private String className;
-
-    /**
-     * The properties of the reporter listener
-     */
-    private List<Property> properties = new ArrayList<>();
-}
-
-// GOOD: Dense, related declarations together
-public class ReporterConfig {
-    private String className;
-    private List<Property> properties = new ArrayList<>();
-}
-```
-
-#### Vertical Distance
-
-Closely related concepts should be kept vertically close to each other. Don't force the reader to hop around the file.
-
-**Rules:**
-- **Local variables:** Declare at the top of the function or as close to first usage as practical
-- **Instance variables:** Declare at the top of the class (everyone needs to know about them)
-- **Dependent functions:** The caller should be above the callee, and they should be close
-- **Conceptual affinity:** Functions that do similar things or operate on the same data should be near each other
-
-#### Vertical Ordering
-
-Function call dependencies should point downward: a function that is called should be below the function that calls it. This creates a nice flow from high-level to low-level, like reading a newspaper.
-
-### Horizontal Formatting
-
-#### Line Length
-
-**Keep lines short.** The old 80-character limit is a reasonable guideline. Modern screens can show more, but readability drops beyond 100-120 characters. Scrolling horizontally breaks the reader's flow.
-
-#### Horizontal Openness and Density
-
-Use whitespace to associate strongly related things and disassociate weakly related things.
-
-```java
-// Spaces around assignment (weak association between sides)
-int lineCount = countLines();
-
-// No space between function name and parenthesis (strong association)
-lineCount = countLines();
-
-// Spaces around binary operators by precedence
-return b*b - 4*a*c;  // Multiplication is higher precedence, tighter
-return (-b + determinant) / (2*a);
-```
-
-#### Indentation
-
-Indentation makes the scope hierarchy visible. Each level of nesting gets one indentation level. **Never break this rule, even for short `if` statements or tiny loops.**
-
-```java
-// BAD: Collapsed scopes hide structure
-if (condition) return true;
-
-// GOOD: Indentation preserved
-if (condition) {
-    return true;
-}
-```
-
-### Team Rules
-
-**A team should agree on a single formatting style and everyone should use it.** Individual style preferences must yield to the team standard.
-
-The best way to enforce team rules:
-
-| Approach | Tool examples | Benefit |
-|----------|---------------|---------|
-| **Automated formatter** | Prettier, Black, gofmt, rustfmt | Eliminates all style debates |
-| **Linter with auto-fix** | ESLint, Pylint, RuboCop | Catches style and quality issues |
-| **Pre-commit hooks** | Husky, pre-commit, lefthook | Prevents style violations from entering repo |
-| **CI enforcement** | Format check in pipeline | Catches anything hooks miss |
-| **EditorConfig** | `.editorconfig` file | Consistent settings across editors |
-
-**The best formatting rule:** Use an automated formatter and never think about formatting again. Time spent debating tabs versus spaces is time not spent writing clean code.
-
----
-
 ## When Comments Are Truly Necessary
 
 Despite the general advice to minimize comments, certain situations genuinely require them:
 
 | Situation | Why code alone isn't enough | Example |
-|-----------|---------------------------|---------|
+| ----------- | --------------------------- | --------- |
 | **Regulatory requirement** | Law/compliance requires documentation | HIPAA, SOX, GDPR compliance notes |
 | **Non-obvious performance choice** | Algorithm choice isn't self-evident | "Using radix sort here because n > 10M and keys are bounded" |
 | **External system quirk** | Workaround for third-party bug | "API returns 200 for errors; we check response body instead" |
