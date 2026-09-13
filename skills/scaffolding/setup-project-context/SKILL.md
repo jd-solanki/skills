@@ -70,10 +70,21 @@ Every candidate fence gets a `file:line`.
 list with one line each, and wait for approval.
 
 - A domain is a subject a task is **about**, not a folder.
+- Name the file and heading with the repository's glossary terms. A name must tell an
+  agent what work loads it; generic containers such as `lifecycle`, `management` or
+  `platform` earn their place only when the glossary gives them a project-specific meaning.
+- Preserve a module's boundary when it owns a cohesive product domain. A task that crosses
+  domains loads multiple files; crossing them is not a reason to merge them under an umbrella.
 - Two domains that always load together are one domain.
 - A domain earns a file once it holds at least one fence or one non-obvious reason.
   Below that bar it is an empty heading pretending to be context.
 - A file heading past ~150 lines is two domains.
+
+For example, a Nuxt project may have `layer-kiosk` owning Kiosk behaviour,
+`layer-realtime-voice` owning voice-session transport, and `layer-cf-ai-search` owning
+Knowledge and Chat. Write `kiosk.md`, `realtime-voice.md` and `knowledge-and-chat.md`.
+A voice-backed Kiosk search task loads all three. Do not hide their ownership in an
+`assistant-answering.md` umbrella.
 
 **Done when** the user has approved the list.
 
