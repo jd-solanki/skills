@@ -1,10 +1,40 @@
 ---
 name: setup-jd-solanki-skills
-description: Setup you may require to use jd-solanki skills and tools.
+description: Set up the global and project instructions required to use jd-solanki skills and tools.
 disable-model-invocation: true
 ---
 
-## 1. Upsert Agent Instructions
+## 1. Maintain Global Agent Instructions
+
+Maintain both global instruction files.
+
+Replace each file's contents with its corresponding block exactly. These files are
+intentionally separate because Claude Code receives additional instructions.
+
+`~/.codex/AGENTS.md`:
+
+```markdown
+- Always load `/ponytail` skill on new session with `ultra` parameter
+- Use subagents for non-(primary/goal) tasks, parallel work & to keep main context window lean
+- Prefer decision-focused asks over context dumping
+```
+
+`~/.claude/CLAUDE.md`:
+
+Content from `~/.codex/AGENTS.md` plus following:
+
+```markdown
+- Use /git-commit for commit
+- For `sudo` commands, run them in /herdr pane using `herdr pane *` commands so I can input password and you can see the logs
+- Instead of responding between each subagent completion, let all subagents finish and then respond
+  - Join every agent you dispatch. Unjoined is unknown, not done
+  - Separation of duties: the agent that wrote it never verifies it
+  - The verifier writes its oracle before reading the implementation
+```
+
+Verify that both files contain the specified content.
+
+## 2. Upsert Project Agent Instructions
 
 **Pick the file to edit:**
 
@@ -87,9 +117,9 @@ Before adding duplicated information, check whether a canonical source already e
 Apply DRY to duplicated **knowledge**, not merely similar-looking code. Do not introduce abstractions solely to eliminate harmless code repetition when doing so would reduce clarity or increase coupling.
 ```
 
-## 2. Third-Party Skills
+## 3. Third-Party Skills
 
 > [!IMPORTANT]
-> Only proceed with this section once **1. Upsert Agent Instructions** is fully done.
+> Only proceed with this section once **2. Upsert Project Agent Instructions** is fully done.
 
 Read [`THIRD-PARTY.md`](./THIRD-PARTY.md) for a list of third-party skills, list them and suggest user that these are skills that they may want to install and use in their projects.
