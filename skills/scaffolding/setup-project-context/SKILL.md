@@ -80,11 +80,11 @@ list with one line each, and wait for approval.
   Below that bar it is an empty heading pretending to be context.
 - A file heading past ~150 lines is two domains.
 
-For example, a Nuxt project may have `layer-kiosk` owning Kiosk behaviour,
-`layer-realtime-voice` owning voice-session transport, and `layer-cf-ai-search` owning
-Knowledge and Chat. Write `kiosk.md`, `realtime-voice.md` and `knowledge-and-chat.md`.
-A voice-backed Kiosk search task loads all three. Do not hide their ownership in an
-`assistant-answering.md` umbrella.
+For example, a Nuxt project may have `layer-auth` owning identity and access,
+`layer-payments` owning Orders and payment collection, and `layer-email` owning email
+delivery. Write `identity-and-access.md`, `payments.md` and `email-delivery.md`. A checkout
+task that emails a receipt loads all three. Do not hide their ownership in a
+`customer-lifecycle.md` umbrella.
 
 **Done when** the user has approved the list.
 
