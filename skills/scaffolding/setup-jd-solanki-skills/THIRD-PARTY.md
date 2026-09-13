@@ -7,6 +7,9 @@
   - ponytail-review
   - ponytail-audit
 - [mattpocock/skills](https://github.com/mattpocock/skills)
+  - codebase-design — `/grilling` points at it
+  - research
+  - writing-for-agents
 - [nostics](https://github.com/vercel-labs/nostics)
 - [better-auth](https://better-auth.com/docs/ai-resources/skills)
   - [better-auth MCP](https://better-auth.com/docs/ai-resources/mcp)
