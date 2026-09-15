@@ -31,6 +31,16 @@ one file, not four.
 
 **A doc earns a line only if the code cannot say it.**
 
+Correctness alone does not earn context. Keep a fact only when omitting it could plausibly cause an
+agent to make a costly wrong decision before nearby code or tests expose the mistake. Otherwise,
+leave it beside the implementation or list only its path under **Where it lives**.
+
+Write the enduring invariant: the intended outcome, ownership boundary, state transition, safety
+property, or failure policy. Prefer that over current symbols, files, call sequences, or wiring. A
+sentence that becomes false after an ordinary rename, move, or implementation refactor is usually
+too low-level. Library and vendor names belong only when the owner has selected the name itself as a
+durable architectural constraint.
+
 A domain file carries five sections and nothing else:
 
 - **Words** — terms used only inside this domain.
@@ -95,6 +105,10 @@ and ask.
 
 Drop any fence whose reason nobody can state. An unexplained fence teaches the next
 agent to guess.
+
+Apply both admission tests before proposing text: would omission permit a costly mistake, and would
+the sentence survive an implementation refactor? Record the candidates you drop so the owner can
+distinguish deliberate pruning from an incomplete survey.
 
 **Done when** every surviving fence carries a reason in the human's own words.
 
