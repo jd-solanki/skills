@@ -6,11 +6,10 @@ Every one of them obeys the rule: a doc earns a line only if the code cannot say
 
 ## 1. The gate — into `AGENTS.md` or `CLAUDE.md`
 
-Upsert between the markers. Nothing else in the file changes.
+Add this section. If the file already has a `## Project context` section, replace it.
+Nothing else in the file changes.
 
 ```markdown
-<!-- project-context -->
-
 ## Project context
 
 Before the first code action in a session: Read `CONTRIBUTING.md`, then invoke
@@ -18,8 +17,6 @@ Before the first code action in a session: Read `CONTRIBUTING.md`, then invoke
 
 `/project-context` holds this repository's words, rules, reasons and fences. Its table
 says which references your task needs. Emit the triage line, then Read those.
-
-<!-- project-context -->
 ```
 
 ## 2. `CONTRIBUTING.md`
@@ -87,12 +84,21 @@ Past ~150 lines, a file is two domains, or it is restating code. Split it or cut
 
 `/audit-project-context` enforces all of the above.
 
+## Upstream of the code
+
+This context holds the decisions. The code implements them.
+
+When a task changes a decision, update the domain file in the same pull request as the
+code. When the code and a domain file disagree, ask the owner which one is wrong.
+
 ## References
 
 Load `glossary.md` every session. Load a domain file when your task enters it.
 
 A domain file is settled unless its header says otherwise. `provisional`: build on it, but
 keep its detail behind one seam. `exploratory`: argue with it before building on it.
+The word moves when the owner's decision moves, in the same pull request as the code it
+governs.
 
 | Reference | Load when |
 | --- | --- |

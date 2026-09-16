@@ -18,6 +18,21 @@ environments sits in `AGENTS.md`, in a glossary, in an ADR, and in a doc under
 `docs/`. The agent must find all four, or it misses a fence and does the obvious thing
 that breaks production.
 
+## Context is upstream of the code
+
+```text
+project context & decisions → codebase → human docs
+```
+
+A decision comes first. The code implements it. Human docs explain the result. So when
+the code and the context disagree, the context is not simply stale: either the code is
+wrong, or a decision changed without being written down. Only the owner can say which,
+so the audit asks instead of rewriting.
+
+Mining the code runs only once, when a repo has no context at all. There the code is
+the only draft left, and mining it spares the owner every question the code can
+answer. Every mined line stays a draft until the owner confirms it as a decision.
+
 ## Split by domain, not by document type
 
 A **domain** is a subject a task is about: environments, deploys, auth. Everything
@@ -110,11 +125,11 @@ reads the context also reads the law for adding to it. One copy, no extra cost.
 
 Different triggers, so they split.
 
-`/setup-project-context` is heavy and rare: survey, mine, interview, drain. It runs
-when a repo has no context, or when it has drifted far enough that mining pays off.
+`/setup-project-context` is heavy and runs once: survey, mine, interview, drain. It
+runs only when a repo has no context.
 
 `/audit-project-context` is light and constant. It runs at the end of a pull request,
-reads the diff, and cuts restatement.
+reads the diff, cuts restatement, and flags drift.
 
 Its one hard rule: **it must open the code.** Real knowledge and restatement look
 identical in prose. Only the file tells them apart. It also runs as a fresh sub-agent,

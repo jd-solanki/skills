@@ -1,16 +1,24 @@
 ---
 name: setup-project-context
-description: Build and maintain this repo's agent context — CONTRIBUTING.md, a /project-context router skill, and one reference file per domain. Re-run it after the repo has drifted.
+description: One-time bootstrap of this repo's agent context — CONTRIBUTING.md, a /project-context router skill, and one reference file per domain — drafted from the code when no context exists yet.
 disable-model-invocation: true
 ---
 
 # Setup Project Context
 
-Upsert. First run builds the context. Later runs rebuild it once a repo has drifted
-far enough that mining and interviewing pay off again.
+Project context is **upstream** of the code:
 
-Everyday upkeep belongs to `/audit-project-context`, which runs at the end of a pull
-request and trims what the week's work added.
+```text
+project context & decisions → codebase → human docs
+```
+
+The owner decides in the context. The code implements the decision. Human docs explain
+the result.
+
+This skill runs once, in a repo with no `skills/internal/project-context/`. The context
+should have come first, so the code is the only draft left: mine it, and the owner
+answers only what the code cannot say. `/audit-project-context` owns every later
+change.
 
 ## The shape it builds
 
@@ -66,14 +74,15 @@ says in the interview, never the one the prose sounds like.
 
 The router file tells the reader what to **do** with each word. Never repeat that here.
 
-A file does not stay `exploratory` because nobody revisited it. When code lands that the
-domain governs, the word is stale — correct it in the same pull request.
+The router template tells later work when the word moves.
 
 ## 1. Survey
 
+If `skills/internal/project-context/` exists, stop. Tell the user the context already
+exists and `/audit-project-context` keeps it. This skill does not run twice.
+
 Read what is already there: `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`,
-`CONTEXT.md`, `docs/`, `package.json`, `skills/`, and any existing
-`skills/internal/project-context/`. Run `git remote -v`.
+`CONTEXT.md`, `docs/`, `package.json` and `skills/`. Run `git remote -v`.
 
 **Done when** you can name every agent-facing doc in the repo and say which tier it
 belongs in.
@@ -81,6 +90,9 @@ belongs in.
 ## 2. Mine
 
 The slowest step and the one that carries the skill. Empty files are the failure mode.
+
+Everything mined is a **draft**. The code shows what exists, never whether it was
+intended. A draft becomes context only when the owner confirms it in step 4.
 
 Dig in every seam:
 
@@ -120,8 +132,12 @@ task that emails a receipt loads all three. Do not hide their ownership in a
 
 ## 4. Interview
 
-The code shows the *what*. Only the human holds the *why*. Take one domain at a time
-and ask.
+The code shows the *what*. Only the owner holds the *why*, and only the owner turns a
+draft into a decision. Take one domain at a time. Skip every question the code already
+answers.
+
+A draft the owner rejects is not context. Ask whether the mining misread the code, or
+the code breaks the owner's decision. Record the second kind for the report.
 
 Drop any fence whose reason nobody can state. An unexplained fence teaches the next
 agent to guess.
@@ -171,8 +187,9 @@ a domain file.
 Edit the file that already exists. If `CLAUDE.md` exists, edit it. Else edit
 `AGENTS.md`. If neither exists, ask which to create.
 
-Upsert the gate block from `TEMPLATES.md` between its `<!-- project-context -->`
-markers. Other skills own other blocks in this file; leave theirs alone.
+Add the `## Project context` section from `TEMPLATES.md`. If the file already has that
+section, replace it in place. Other skills own other sections in this file; leave theirs
+alone.
 
 **Done when** every remaining section either holds true in an unrelated repo, or is
 the gate.
@@ -189,4 +206,6 @@ Say plainly:
 - Which domains were written, and how many fences each holds.
 - Which domains came out thin, so the user knows where the context is still weak.
 - Which fences were dropped, and why.
+- Every draft where the code breaks the owner's decision, with its `file:line`: code to
+  fix.
 - How many lines `AGENTS.md` lost.

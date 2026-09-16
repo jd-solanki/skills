@@ -22,12 +22,24 @@ Past ~150 lines, a file is two domains, or it is restating code. Split it or cut
 
 `/audit-project-context` enforces all of the above.
 
+## Upstream of the code
+
+This context holds the decisions. The code implements them.
+
+When a task changes a decision, update the domain file in the same pull request as the
+code. When the code and a domain file disagree, ask the owner which one is wrong.
+
 ## References
 
 Load `glossary.md` every session. Load a domain file when your task enters it.
 
 A row may name any path in the repository. Living inside this folder is not what makes
 a file loadable; this table is.
+
+A domain file is settled unless its header says otherwise. `provisional`: build on it, but
+keep its detail behind one seam. `exploratory`: argue with it before building on it.
+The word moves when the owner's decision moves, in the same pull request as the code it
+governs.
 
 | Reference | Load when |
 | --- | --- |
