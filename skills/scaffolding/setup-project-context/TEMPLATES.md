@@ -91,6 +91,9 @@ Past ~150 lines, a file is two domains, or it is restating code. Split it or cut
 
 Load `glossary.md` every session. Load a domain file when your task enters it.
 
+A domain file is settled unless its header says otherwise. `provisional`: build on it, but
+keep its detail behind one seam. `exploratory`: argue with it before building on it.
+
 | Reference | Load when |
 | --- | --- |
 | `glossary.md` | always |
@@ -131,6 +134,9 @@ not padded.
 # [Domain]
 
 load-when: [the tasks that need this file]
+
+confidence: [provisional | exploratory] — [what is still moving. Omit this line entirely
+when the domain is settled.]
 
 ## Words
 

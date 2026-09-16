@@ -41,13 +41,33 @@ sentence that becomes false after an ordinary rename, move, or implementation re
 too low-level. Library and vendor names belong only when the owner has selected the name itself as a
 durable architectural constraint.
 
-A domain file carries five sections and nothing else:
+A domain file carries a header and five sections, nothing else. The header is `load-when:`,
+plus `confidence:` when the domain is not settled.
 
 - **Words** — terms used only inside this domain.
 - **Rules** — conventions no linter or type checker enforces.
 - **Reasons** — why this shape was chosen, when the code cannot show it.
 - **Fences** — the trap, where it bites (`file:line`), and why the fence stands.
 - **Where it lives** — paths. Everything you were about to explain goes here instead.
+
+## How solid a domain is
+
+A domain file states how far its reader should trust it, with a `confidence:` line in the
+header: one of three words, then a short clause naming what is still moving.
+
+| `confidence:` | Write it when the owner can defend |
+| ------------- | ---------------------------------- |
+| `settled`     | this shape, in review              |
+| `provisional` | the direction, but not the detail  |
+| `exploratory` | neither — they are still guessing  |
+
+`settled` is the default, so only a shaky file carries the line. Write the word the owner
+says in the interview, never the one the prose sounds like.
+
+The router file tells the reader what to **do** with each word. Never repeat that here.
+
+A file does not stay `exploratory` because nobody revisited it. When code lands that the
+domain governs, the word is stale — correct it in the same pull request.
 
 ## 1. Survey
 
@@ -110,7 +130,11 @@ Apply both admission tests before proposing text: would omission permit a costly
 the sentence survive an implementation refactor? Record the candidates you drop so the owner can
 distinguish deliberate pruning from an incomplete survey.
 
-**Done when** every surviving fence carries a reason in the human's own words.
+Ask each domain's `confidence:` word outright. The owner says it; never infer it from how
+sure the prose sounds.
+
+**Done when** every surviving fence carries a reason in the human's own words, and every
+domain has a confidence word the owner chose.
 
 ## 5. Write
 
