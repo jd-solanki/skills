@@ -1,7 +1,5 @@
 # Layout
 
-load-when: adding, moving, renaming or linking a skill
-
 ## Rules
 
 - A published skill lives at `skills/<category>/<skill-name>/SKILL.md`. Reference files

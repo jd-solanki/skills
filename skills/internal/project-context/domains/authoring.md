@@ -1,7 +1,5 @@
 # Authoring
 
-load-when: writing or editing the text inside a skill, and committing it
-
 ## Rules
 
 - Write and edit every skill with `/writing-for-agents`. Read its `SKILL-MECHANICS.md`
