@@ -93,8 +93,8 @@ task that emails a receipt loads all three. Do not hide their ownership in a
 
 ## A domain file
 
-A header and five sections, nothing else. The header is `load-when:`, plus `confidence:`
-when the domain is not settled.
+Five sections, nothing else, plus a `confidence:` line under the heading when the domain
+is not settled. Its `load-when` lives only in the router table.
 
 - **Words** — terms used only inside this domain.
 - **Rules** — conventions no linter or type checker enforces.

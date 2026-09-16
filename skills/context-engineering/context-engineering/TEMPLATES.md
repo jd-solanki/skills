@@ -139,8 +139,6 @@ not padded.
 ```markdown
 # [Domain]
 
-load-when: [the tasks that need this file]
-
 confidence: [provisional | exploratory] — [what is still moving. Omit this line entirely
 when the domain is settled.]
 

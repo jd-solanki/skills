@@ -64,6 +64,10 @@ A file in `docs/` has no loader. Nothing decides when to read it, so the agent e
 browses everything or guesses. The router's table is that decision, written down:
 every reference with a `load-when` beside it.
 
+A domain file does not repeat its own `load-when`. An agent reads the file only after the
+table has made that choice, so a copy inside the file does no work and can drift from the
+table.
+
 The table can name **any path in the repo**. Living inside the skill folder is not
 what makes a file loadable. So placement is decided by a different question: who owns
 the file.
