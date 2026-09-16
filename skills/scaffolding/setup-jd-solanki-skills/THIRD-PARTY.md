@@ -6,6 +6,7 @@
   - ponytail
   - ponytail-review
   - ponytail-audit
+  - grill-with-docs
 - [mattpocock/skills](https://github.com/mattpocock/skills)
   - codebase-design — `/grilling` points at it
   - research
