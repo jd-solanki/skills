@@ -10,11 +10,10 @@ disable-model-invocation: true
 A week of work leaves real knowledge and restatement side by side in
 `/project-context`. Both arrived the same way. Only reading the code tells them apart.
 
-The same week can move the code away from a decision. The context is **upstream** of
-the code, so code that disagrees with it is **drift**: either the code is wrong, or the
-decision changed and nobody wrote it down. Only the owner knows which.
+The same week can move the code away from a decision: **drift**.
 
-Built once by `/setup-project-context`. Kept honest by this.
+Built once by `/setup-project-context`. Changed through `/context-engineering`. Kept
+honest by this.
 
 ## Separation of duties
 
@@ -25,8 +24,9 @@ Hand it the diff range and the paths. It reports; you present.
 
 ## The law
 
-`/project-context` `SKILL.md` carries the rules under **What earns a line here**. Read
-them from there. This skill enforces them and does not restate them.
+Invoke `/context-engineering` before anything else. It holds the law this skill enforces.
+If it is not installed, stop and tell the user to install it. The sub-agent invokes it
+too, as its first action.
 
 ## 1. Pin the range
 
@@ -50,8 +50,7 @@ For each added line, find what it describes and read it. Then it is one of three
   enforces, a reason, or a fence.
 - **Cut to a link** — the code says it. Delete the prose. Add the path under **Where
   it lives** if it is missing.
-- **Cut** — it is a changelog entry, a feature checklist, or a rule another domain
-  file already owns.
+- **Cut** — it earns nothing under **What earns a line**.
 
 **Done when** every added line carries a verdict and the `file:line` that settled it.
 A verdict with no location is a guess, and a guess keeps garbage.
@@ -68,9 +67,6 @@ Drift is the owner's call. Put both options to them:
 - **The decision changed.** The owner states the new decision, and it goes into the
   domain file in their words, with its `confidence:` word if that moved too.
 
-Leave the domain file as it is until the owner answers. Rewriting a decision to match
-the code turns drift into a decision nobody made.
-
 A diff that enters code no domain governs gets the same question: does it carry a
 decision the context is missing?
 
@@ -79,14 +75,10 @@ decision the context is missing?
 
 ## 4. Check the shape
 
-- Every fence names where it bites and why the fence stands. A fence with no reason
-  teaches the next agent to guess; cut it, or ask the user for the reason.
-- Every domain file sits under ~150 lines. Past that, split it or cut the restatement.
-- A term that appears in `glossary.md` but is used inside one domain only moves to that
-  domain's **Words**.
-- The routing table lists every file in `domains/`, and every row's `load-when`
-  names tasks rather than topics.
-- Each reason that rests on a decision or an investigation links it under `docs/`.
+Hold every context file against **The shape**, **Domains**, **A domain file** and **Live
+and record** in `context-engineering`.
+
+**Done when** every rule there has been applied to every file.
 
 ## 5. Apply and report
 
