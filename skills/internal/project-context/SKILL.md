@@ -46,4 +46,4 @@ governs.
 | `glossary.md` | always |
 | `domains/layout.md` | adding, moving, renaming or linking a skill |
 | `domains/authoring.md` | writing or editing the text inside a skill, and committing it |
-| `docs/context-engineering.md` | changing the shape of `/setup-project-context`, `/audit-project-context`, or the layout they build |
+| `docs/context-engineering.md` | changing the shape of `/context-engineering`, `/setup-project-context`, `/audit-project-context`, or the layout they build |

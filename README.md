@@ -21,7 +21,7 @@
     - Upsert instructions into your `CLAUDE.md` or `AGENTS.md` file(s) for how to load and use these skills.
     - Suggest you install and use third-party skills that I mostly use in my projects. See [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md) for a list of third-party skills.
 4. Bam - you're ready to go.
-5. Run `/setup-project-context` to give the agent this repo's own context — its words, rules, reasons, and the fences it must not walk into.
+5. Install `/context-engineering`, `/setup-project-context` and `/audit-project-context` together. Run `/setup-project-context` to give the agent this repo's own context — its words, rules, reasons, and the fences it must not walk into.
 
 ## Context engineering
 
@@ -35,9 +35,9 @@ An agent arrives holding coding guidelines and nothing else. `/setup-project-con
 | `domains/<domain>.md` | agent | only when a task enters that domain |
 | `README.md` | humans | never read by an agent |
 
-`/audit-project-context` runs at the end of a pull request and trims whatever the week's work added that the code could have said itself.
+`/context-engineering <decision>` records a decision in the right domain file. `/audit-project-context` runs at the end of a pull request and trims whatever the week's work added that the code could have said itself. Install all three: the other two call `/context-engineering` for the shape and the rules.
 
-The reasoning behind all of it — why domain and not document type, why the glossary left the repo root, why setup and audit are two skills — is in [`docs/context-engineering.md`](./docs/context-engineering.md).
+The reasoning behind all of it — why domain and not document type, why the glossary left the repo root, why the method is three skills — is in [`docs/context-engineering.md`](./docs/context-engineering.md).
 
 ## Tips
 

@@ -3,9 +3,11 @@
 How this repository gives an AI agent the context a human already walks in with, and
 why it is shaped the way it is.
 
-The method ships as two skills. `/setup-project-context` builds a repository's context;
-`/audit-project-context` keeps it honest. Those skills hold the **steps**. This document
-holds the **reasons**, so read it before you change the shape of either.
+The method ships as three skills. `/context-engineering` holds the shape and the law,
+and records a decision when the owner calls it. `/setup-project-context` builds a
+repository's context; `/audit-project-context` keeps it honest. Those skills hold the
+**steps**. This document holds the **reasons**, so read it before you change the shape of
+any of them.
 
 ## The problem
 
@@ -121,9 +123,25 @@ week and cleaned once.
 The router loads every session, so the rules sit at the top of it. Every agent that
 reads the context also reads the law for adding to it. One copy, no extra cost.
 
-## Setup and audit are two skills
+## One base skill, two process skills
 
-Different triggers, so they split.
+Setup, audit and a recorded decision all need the same shape and the same law. That
+reference has one home: `/context-engineering`, a model-invoked skill the other two call
+with the Skill tool. Two alternatives fail:
+
+- A shared file outside the skills does not travel. The skills CLI installs each skill
+  folder alone.
+- A user-invoked skill cannot call another. Neither process skill could own the
+  reference for the other.
+
+The cost is the install: a repository needs all three skills, not one.
+
+Recording a decision has no process skill and no gate. The owner types
+`/context-engineering <decision>` when a decision is made; a model-invoked skill can still
+be typed by hand. A code task that changes a decision still updates its domain file
+itself, under the router's short copy of the law.
+
+Setup and audit have different triggers, so they split.
 
 `/setup-project-context` is heavy and runs once: survey, mine, interview, drain. It
 runs only when a repo has no context.
