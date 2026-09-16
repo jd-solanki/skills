@@ -6,11 +6,11 @@
   - ponytail
   - ponytail-review
   - ponytail-audit
-  - grill-with-docs
 - [mattpocock/skills](https://github.com/mattpocock/skills)
   - codebase-design — `/grilling` points at it
   - research
   - writing-for-agents
+  - grill-with-docs
 - [nostics](https://github.com/vercel-labs/nostics)
 - [better-auth](https://better-auth.com/docs/ai-resources/skills)
   - [better-auth MCP](https://better-auth.com/docs/ai-resources/mcp)
