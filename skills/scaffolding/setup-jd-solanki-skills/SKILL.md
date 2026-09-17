@@ -48,20 +48,6 @@ To decide what to load:
 3. **Don't re-read** what's already loaded; re-evaluate only if the task changes.
 
 When in doubt, load too few rather than too many — you can read a reference later once the task makes the condition clear.
-
-## Context Window - Smart Zone, Delegation & Sub Agents
-
-As the context window fills with a large number of irrelevant/unwanted tokens, it causes model's output quality to degrade.
-
-It is strongly recommended to utilize sub agents where task is simple few steps, not relevant to main task of the current thread. Use Sub Agents to keep main context window clean, lean & relevant. See [Sub Agents](#sub-agents) section below for more details.
-
-While working on main task, if you find out that user has given another task which is medium to large in size, which requires its own new thread utilizing multiple sub agents under it, so it is strongly recommended to ask user to start a new thread and resolve that task in new thread, and once it's done, back to current thread.
-
-## Sub Agents
-
-When invoking sub agents, it's important to also pass instruction to invoke task related skills along with relevant context to them. E.g. When handing a feature/task, instruct to invoke feature development related skills available in the system.
-
-For example, when verification of a task is required, invoke a sub agent to handle the verification task and return only the result to main agent. This way, main agent's context window remains clean and relevant to the main task. Another example can be inspecting bug in implement task, where sub agent can be invoked to handle the inspection and return only the result to main agent.
 ```
 
 Verify that both files contain the specified content.
