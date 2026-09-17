@@ -24,12 +24,7 @@ Content from `~/.codex/AGENTS.md` plus following:
 
 ```markdown
 - Use /git-commit for commit
-- Use subagents for non-(primary/goal) tasks, parallel work & to keep main context window lean
 - For `sudo` commands, run them in /herdr pane using `herdr pane *` commands so I can input password and you can see the logs
-- Instead of responding between each subagent completion, let all subagents finish and then respond
-  - Join every agent you dispatch. Unjoined is unknown, not done
-  - Separation of duties: the agent that wrote it never verifies it
-  - The verifier writes its oracle before reading the implementation
 
 ## Skill reference loading
 
