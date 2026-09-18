@@ -67,8 +67,8 @@ The block:
 ## General Rules
 
 - Do not manually edit files managed by CLI tools. E.g. skills-lock.json, pnpm-lock.yml, etc
-- When creating .md file, if you find something can be visualized for reader's understanding do create visualization block using mermaid. This also applies to markdown supporting operations like GH issue or comments or form submissions which support markdown content
-  - For GH issues & PR, also create this visualization block on top somewhere so they can easily understand via visualization
+- Add a mermaid diagram wherever markdown reaches a human reader and a diagram aids understanding — GH issues, PRs, comments, form submissions. There it goes near the top.
+  - Agent-only writing carries prose alone: skills, `docs/*`, project context, etc.
 - **Git is the changelog.** Present tense only; no "used to" / "previously".
   - Exception - **Chesterton's Fence**: state the trap, not the timeline.
   - "`--no-folding` breaks `~/.agents`" = fence. "we tried it last week" = changelog.
