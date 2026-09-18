@@ -72,7 +72,7 @@ description: This repository's words, rules, reasons and fences. Invoke before t
 - A **word** — a term whose meaning this project fixes.
 - A **rule** — a convention no linter or type checker enforces.
 - A **reason** — why this shape was chosen, when the code cannot show it.
-- A **fence** — the trap, where it bites (`file:line`), and why the fence stands.
+- A **fence** — the trap, where it bites (`file:symbol`), and why the fence stands.
 
 **The test: could I learn this by reading the code?** Then link the path under
 **Where it lives**. Leave the prose out.

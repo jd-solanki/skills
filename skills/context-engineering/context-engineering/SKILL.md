@@ -103,11 +103,16 @@ is not settled. Its `load-when` lives only in the router table.
 - **Words** — terms used only inside this domain.
 - **Rules** — conventions no linter or type checker enforces.
 - **Reasons** — why this shape was chosen, when the code cannot show it.
-- **Fences** — the trap, where it bites (`file:line`), and why the fence stands.
+- **Fences** — the trap, where it bites (`file:symbol`), and why the fence stands.
 - **Where it lives** — paths. Everything you were about to explain goes here instead.
 
 A fence with no reason teaches the next agent to guess. Ask the owner for the reason, or
 drop the fence.
+
+`file:symbol` is the path plus the enclosing symbol — function, class, constant, a heading
+in prose, or the path alone. Never a line number: it rots on the next edit above it, then
+points somewhere wrong without saying so. A report may still carry one; it is read the
+minute it is written.
 
 ### Confidence
 
