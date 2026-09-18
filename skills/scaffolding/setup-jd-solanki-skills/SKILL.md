@@ -15,6 +15,7 @@ intentionally separate because Claude Code receives additional instructions.
 
 ```markdown
 - Always load `/ponytail` skill on new session with `ultra` parameter
+- Use precise domain term instead of describing the whole concept
 - Prefer decision-focused asks over context dumping
 ```
 
