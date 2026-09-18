@@ -15,8 +15,9 @@ before.
 1. **Pin the range.** `git diff <merge-base>` — no second ref, so earlier rounds' uncommitted fixes
    stay in scope. Pin the spec too (PR body, or the issue it closes); a reviewer with no spec
    reports style.
-2. **Both reviewers → join → implementer → join.** Dispatch the two in one message and wait for
-   both. Silent between them; report once the round closes.
+2. **Both reviewers → join → implementer → join.** Dispatch the two in one message, then let each
+   agent's completion notification arrive on its own; `sleep` buys nothing. Silent between them;
+   report once the round closes.
 3. **Carry paths, not text.** Each reviewer writes its own ledger to the session scratchpad —
    `round-[N]-correctness.md`, `round-[N]-simplicity.md` — and returns one summary line. Hand the
    next agent the paths to read. The axis in the filename is load-bearing: next round's reviewer
