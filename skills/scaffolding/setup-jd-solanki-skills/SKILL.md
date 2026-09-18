@@ -23,6 +23,7 @@ intentionally separate because Claude Code receives additional instructions.
 Content from `~/.codex/AGENTS.md` plus following:
 
 ```markdown
+- Prefer subagent notification over sleep
 - Use /git-commit for commit
 - For `sudo` commands, run them in /herdr pane using `herdr pane *` commands so I can input password and you can see the logs
 
