@@ -41,7 +41,8 @@ Dig in every seam:
 - Commented-out code, dead flags, config that departs from the default.
 - Closed issues and merged pull requests, through `gh`, when the remote is GitHub.
 
-Every candidate fence gets a `file:line`.
+Every candidate fence gets a `file:symbol`. Grep hands you a line number; carry the
+enclosing symbol instead, because the fence outlives the line.
 
 **Done when** every candidate carries a location. A fence with no location is a guess.
 
