@@ -34,7 +34,7 @@
   `ls -la .claude/skills/` and read the target before editing through a link.
 - **`/link-skills` hardcodes `skills/<category>/<name>`.** A skill placed directly
   under `skills/` cannot be linked, because the relative depth it builds is wrong.
-  `skills/productivity/link-skills/SKILL.md:8`
+  `skills/productivity/link-skills/SKILL.md`
 - **`CLAUDE.md` is a symlink to `AGENTS.md`.** Both agents read one file, so a tool
   that refuses to write through a symlink must be pointed at `AGENTS.md` instead.
 
