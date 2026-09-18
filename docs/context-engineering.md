@@ -140,6 +140,12 @@ with the Skill tool. Two alternatives fail:
 
 The cost is the install: a repository needs all three skills, not one.
 
+`/domain-modeling` is the fourth. It already owns how a glossary entry and an ADR are
+written, so `/context-engineering` delegates both rather than keeping a second copy of
+rules it does not own. A weaker copy is worse than a pointer: a reader who finds it
+follows it, and never learns the copy was the loose one. So the base skill governs
+which file a term goes in, and `/domain-modeling` governs how the entry is written.
+
 Recording a decision has no process skill and no gate. The owner types
 `/context-engineering <decision>` when a decision is made; a model-invoked skill can still
 be typed by hand. A code task that changes a decision still updates its domain file

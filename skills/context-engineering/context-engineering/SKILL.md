@@ -14,6 +14,10 @@ argument-hint: "[a decision to record]"
 
 Read [`TEMPLATES.md`](./TEMPLATES.md) before you write any context file.
 
+Invoke `/domain-modeling` before you write a **word** or an **ADR**. It owns both
+formats, so this skill does not restate them. A rule, a reason, a fence or a path needs
+nothing from it. If it is not installed, stop and tell the user to install it.
+
 ## Upstream of the code
 
 ```text

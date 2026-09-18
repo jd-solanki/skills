@@ -116,20 +116,11 @@ pays for it.
 # Glossary
 
 [One or two sentences: what this project is, in its own vocabulary.]
-
-**[Term]**:
-[One or two sentences. What it IS, not what it does.]
-_Avoid_: [the words this one replaces]
 ```
 
-Rules:
-
-- **Be opinionated.** Where several words exist for one concept, pick one and list the
-  rest under `_Avoid_`.
-- **Keep definitions tight.** One or two sentences.
-- **Project terms only.** Timeouts, error types and utility patterns are general
-  programming, not this project's language.
-- No implementation detail and no decisions. Those are **Reasons** and **Fences**.
+`/domain-modeling` owns what an entry looks like. Read its `GLOSSARY-FORMAT.md` and
+write every entry from that, here and in a domain file's **Words**. This file governs
+which of the two a term goes in; that one governs how it is written.
 
 ## 5. `domains/<domain>.md`
 
