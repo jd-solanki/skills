@@ -1,6 +1,7 @@
 ---
 name: git-commit
 description: A skill to commit changes to a git repository, following conventional commit format.
+disable-model-invocation: true
 ---
 
 - Follow conventional commit format
